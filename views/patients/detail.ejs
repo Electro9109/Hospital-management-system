@@ -1,0 +1,170 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+
+                <% if (success) { %>
+                    <div class="alert alert-success">✅ <%= success %>
+                    </div>
+                    <% } %>
+
+                        <div class="page-header">
+                            <a href="/patients" class="btn btn-secondary">← Back to Patients</a>
+                        </div>
+
+                        <!-- Patient Header -->
+                        <div class="detail-header animate-in">
+                            <div class="detail-avatar" style="background: var(--accent-primary);">
+                                <%= patient.NAME ? patient.NAME.charAt(0) : '?' %>
+                            </div>
+                            <div class="detail-info">
+                                <h2>
+                                    <%= patient.NAME %>
+                                </h2>
+                                <div class="detail-meta">
+                                    <div class="detail-meta-item">
+                                        <span class="meta-icon">🆔</span>
+                                        <span>ID: #<%= patient.PATIENT_ID %></span>
+                                    </div>
+                                    <% if (patient.GENDER) { %>
+                                        <div class="detail-meta-item">
+                                            <span class="meta-icon">👤</span>
+                                            <span>
+                                                <%= patient.GENDER %>
+                                            </span>
+                                        </div>
+                                        <% } %>
+                                            <% if (patient.BLOOD_GROUP) { %>
+                                                <div class="detail-meta-item">
+                                                    <span class="meta-icon">🩸</span>
+                                                    <span>
+                                                        <%= patient.BLOOD_GROUP %>
+                                                    </span>
+                                                </div>
+                                                <% } %>
+                                                    <% if (patient.PHONE) { %>
+                                                        <div class="detail-meta-item">
+                                                            <span class="meta-icon">📞</span>
+                                                            <span>
+                                                                <%= patient.PHONE %>
+                                                            </span>
+                                                        </div>
+                                                        <% } %>
+                                                            <% if (patient.EMAIL) { %>
+                                                                <div class="detail-meta-item">
+                                                                    <span class="meta-icon">📧</span>
+                                                                    <span>
+                                                                        <%= patient.EMAIL %>
+                                                                    </span>
+                                                                </div>
+                                                                <% } %>
+                                                                    <% if (patient.DOB) { %>
+                                                                        <div class="detail-meta-item">
+                                                                            <span class="meta-icon">🎂</span>
+                                                                            <span>
+                                                                                <%= formatDate(patient.DOB) %>
+                                                                            </span>
+                                                                        </div>
+                                                                        <% } %>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="content-grid">
+                            <!-- Appointment History -->
+                            <div class="card animate-in">
+                                <div class="card-header">
+                                    <h3>📅 Appointment History</h3>
+                                </div>
+                                <% if (appointments.length===0) { %>
+                                    <div class="empty-state">
+                                        <div class="empty-icon">📅</div>
+                                        <h3>No appointments</h3>
+                                        <p>No appointment history for this patient.</p>
+                                    </div>
+                                    <% } else { %>
+                                        <div class="table-container" style="border: none;">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Doctor</th>
+                                                        <th>Department</th>
+                                                        <th>Status</th>
+                                                        <th>Stage</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <% appointments.forEach(function(a) { %>
+                                                        <tr data-href="/appointments/<%= a.APPOINTMENT_ID %>">
+                                                            <td class="primary-text">
+                                                                <%= formatDate(a.DATE_OF_VISIT) %>
+                                                            </td>
+                                                            <td>Dr. <%= a.DOCTOR_NAME %>
+                                                            </td>
+                                                            <td>
+                                                                <%= a.DEPT_NAME || '—' %>
+                                                            </td>
+                                                            <td><%- statusBadge(a.STATUS) %></td>
+                                                            <td><%- statusBadge(a.WORKFLOW_STAGE) %></td>
+                                                        </tr>
+                                                        <% }); %>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <% } %>
+                            </div>
+
+                            <!-- Prescription History -->
+                            <div class="card animate-in">
+                                <div class="card-header">
+                                    <h3>💊 Prescription History</h3>
+                                </div>
+                                <% if (prescriptions.length===0) { %>
+                                    <div class="empty-state">
+                                        <div class="empty-icon">💊</div>
+                                        <h3>No prescriptions</h3>
+                                        <p>No prescriptions recorded for this patient.</p>
+                                    </div>
+                                    <% } else { %>
+                                        <div class="table-container" style="border: none;">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Doctor</th>
+                                                        <th>Diagnosis</th>
+                                                        <th>Follow-up</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <% prescriptions.forEach(function(pr) { %>
+                                                        <tr>
+                                                            <td class="primary-text">
+                                                                <%= formatDate(pr.DATE_OF_VISIT) %>
+                                                            </td>
+                                                            <td>Dr. <%= pr.DOCTOR_NAME %>
+                                                            </td>
+                                                            <td>
+                                                                <%= pr.DIAGNOSIS || '—' %>
+                                                            </td>
+                                                            <td>
+                                                                <%= formatDate(pr.FOLLOW_UP) %>
+                                                            </td>
+                                                            <td>
+                                                                <a href="/prescriptions/<%= pr.PRESCRIPTION_ID %>"
+                                                                    class="btn btn-sm btn-secondary">View</a>
+                                                            </td>
+                                                        </tr>
+                                                        <% }); %>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <% } %>
+                            </div>
+                        </div>
+
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

@@ -1,0 +1,272 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+
+                <% if (success) { %>
+                    <div class="alert alert-success">✅ <%= success %>
+                    </div>
+                    <% } %>
+                        <% if (error) { %>
+                            <div class="alert alert-error">⚠️ <%= error %>
+                            </div>
+                            <% } %>
+
+                                <div class="page-header">
+                                    <a href="/appointments" class="btn btn-secondary">← Back to Appointments</a>
+                                    <div class="page-actions">
+                                        <% if (user.role.toLowerCase()==='doctor' &&
+                                            ['triage','checked-in'].includes((appt.WORKFLOW_STAGE || ''
+                                            ).toLowerCase())) { %>
+                                            <a href="/prescriptions/write/<%= appt.APPOINTMENT_ID %>"
+                                                class="btn btn-success">✏️ Write Prescription</a>
+                                            <% } %>
+                                                <% if (['receptionist','admin'].includes(user.role.toLowerCase()) &&
+                                                    (appt.WORKFLOW_STAGE || '' ).toLowerCase()==='post-consultation' ) {
+                                                    %>
+                                                    <a href="/billing/generate/<%= appt.APPOINTMENT_ID %>"
+                                                        class="btn btn-primary">💳 Generate Bill</a>
+                                                    <% } %>
+                                    </div>
+                                </div>
+
+                                <!-- Workflow Tracker -->
+                                <% const stages=['registered', 'checked-in' , 'triage' , 'in-consultation'
+                                    , 'post-consultation' , 'billing' , 'discharged' ]; const
+                                    currentStage=(appt.WORKFLOW_STAGE || '' ).toLowerCase(); const
+                                    currentIdx=stages.indexOf(currentStage); %>
+                                    <div class="card animate-in mb-3">
+                                        <div class="card-header">
+                                            <h3>🔄 Patient Journey</h3>
+                                            <span>Current: <strong style="color: var(--accent-primary);">
+                                                    <%= appt.WORKFLOW_STAGE %>
+                                                </strong></span>
+                                        </div>
+                                        <div class="workflow-tracker">
+                                            <% stages.forEach(function(stage, idx) { %>
+                                                <div
+                                                    class="workflow-step <%= idx < currentIdx ? 'completed' : '' %> <%= idx === currentIdx ? 'active' : '' %>">
+                                                    <div class="step-node">
+                                                        <div class="step-circle">
+                                                            <% if (idx < currentIdx) { %>✓<% } else { %>
+                                                                    <%= idx + 1 %>
+                                                                        <% } %>
+                                                        </div>
+                                                        <span class="step-label">
+                                                            <%= stage.replace('-', ' ' ) %>
+                                                        </span>
+                                                    </div>
+                                                    <% if (idx < stages.length - 1) { %>
+                                                        <div class="step-connector"></div>
+                                                        <% } %>
+                                                </div>
+                                                <% }); %>
+                                        </div>
+
+                                        <% if (allowedTransitions.length> 0) { %>
+                                            <div
+                                                style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                                                <form method="POST"
+                                                    action="/appointments/<%= appt.APPOINTMENT_ID %>/stage"
+                                                    style="display: flex; align-items: center; gap: 12px;">
+                                                    <span
+                                                        style="color: var(--text-secondary); font-size: 0.85rem;">Advance
+                                                        to:</span>
+                                                    <% allowedTransitions.forEach(function(stage) { %>
+                                                        <button type="submit" name="new_stage" value="<%= stage %>"
+                                                            class="btn btn-sm btn-primary">
+                                                            <%= stage.replace('-', ' ' ) %> →
+                                                        </button>
+                                                        <% }); %>
+                                                </form>
+                                            </div>
+                                            <% } %>
+                                    </div>
+
+                                    <!-- Appointment Details -->
+                                    <div class="content-grid">
+                                        <div class="card animate-in">
+                                            <div class="card-header">
+                                                <h3>📋 Appointment Info</h3>
+                                            </div>
+                                            <div class="card-body">
+                                                <table>
+                                                    <tr>
+                                                        <td
+                                                            style="padding: 10px 16px; color: var(--text-muted); width: 150px;">
+                                                            Appointment ID</td>
+                                                        <td class="primary-text">#<%= appt.APPOINTMENT_ID %>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 10px 16px; color: var(--text-muted);">Date
+                                                        </td>
+                                                        <td class="primary-text">
+                                                            <%= formatDate(appt.DATE_OF_VISIT) %>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 10px 16px; color: var(--text-muted);">Time
+                                                        </td>
+                                                        <td>
+                                                            <%= formatTime(appt.START_TIME) %> — <%=
+                                                                    formatTime(appt.END_TIME) %>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 10px 16px; color: var(--text-muted);">Status
+                                                        </td>
+                                                        <td><%- statusBadge(appt.STATUS) %></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 10px 16px; color: var(--text-muted);">Room
+                                                        </td>
+                                                        <td>
+                                                            <%= appt.ROOM_NUMBER ? '#' + appt.ROOM_NUMBER + ' (' +
+                                                                appt.ROOM_TYPE + ')' : '—' %>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 10px 16px; color: var(--text-muted);">
+                                                            Assigned Staff</td>
+                                                        <td>
+                                                            <%= appt.STAFF_NAME || '—' %>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                        <div class="card animate-in">
+                                            <div class="card-header">
+                                                <h3>👤 Patient Info</h3>
+                                                <a href="/patients/<%= appt.PATIENT_ID %>"
+                                                    class="btn btn-sm btn-secondary">Full Profile</a>
+                                            </div>
+                                            <div class="card-body">
+                                                <table>
+                                                    <tr>
+                                                        <td
+                                                            style="padding: 10px 16px; color: var(--text-muted); width: 150px;">
+                                                            Name</td>
+                                                        <td class="primary-text">
+                                                            <%= appt.PATIENT_NAME %>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 10px 16px; color: var(--text-muted);">Gender
+                                                        </td>
+                                                        <td>
+                                                            <%= appt.GENDER || '—' %>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 10px 16px; color: var(--text-muted);">Blood
+                                                            Group</td>
+                                                        <td><span class="badge badge-info">
+                                                                <%= appt.BLOOD_GROUP || '—' %>
+                                                            </span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 10px 16px; color: var(--text-muted);">DOB
+                                                        </td>
+                                                        <td>
+                                                            <%= formatDate(appt.DOB) %>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 10px 16px; color: var(--text-muted);">Phone
+                                                        </td>
+                                                        <td>
+                                                            <%= appt.PATIENT_PHONE || '—' %>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 10px 16px; color: var(--text-muted);">Doctor
+                                                        </td>
+                                                        <td>Dr. <%= appt.DOCTOR_NAME %> (<%= appt.SPECIALIZATION %>)
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 10px 16px; color: var(--text-muted);">
+                                                            Department</td>
+                                                        <td>
+                                                            <%= appt.DEPT_NAME || '—' %>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Prescription if exists -->
+                                    <% if (prescription) { %>
+                                        <div class="card animate-in">
+                                            <div class="card-header">
+                                                <h3>💊 Prescription</h3>
+                                                <a href="/prescriptions/<%= prescription.PRESCRIPTION_ID %>"
+                                                    class="btn btn-sm btn-secondary">View Full</a>
+                                            </div>
+                                            <div class="card-body">
+                                                <div style="margin-bottom: 16px;">
+                                                    <strong
+                                                        style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Diagnosis</strong>
+                                                    <p class="primary-text">
+                                                        <%= prescription.DIAGNOSIS || '—' %>
+                                                    </p>
+                                                </div>
+                                                <% if (prescription.NOTES) { %>
+                                                    <div style="margin-bottom: 16px;">
+                                                        <strong
+                                                            style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Notes</strong>
+                                                        <p>
+                                                            <%= prescription.NOTES %>
+                                                        </p>
+                                                    </div>
+                                                    <% } %>
+
+                                                        <% if (medicines.length> 0) { %>
+                                                            <div class="table-container"
+                                                                style="border: 1px solid var(--border-color); margin-top: 12px;">
+                                                                <table>
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Medicine</th>
+                                                                            <th>Form</th>
+                                                                            <th>Dosage</th>
+                                                                            <th>Frequency</th>
+                                                                            <th>Duration</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <% medicines.forEach(function(m) { %>
+                                                                            <tr>
+                                                                                <td class="primary-text">
+                                                                                    <%= m.MEDICINE_NAME %> (<%=
+                                                                                            m.STRENGTH || '' %>)
+                                                                                </td>
+                                                                                <td>
+                                                                                    <%= m.DOSAGE_FORM || '—' %>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <%= m.DOSAGE || '—' %>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <%= m.FREQUENCY || '—' %>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <%= m.DURATION || '—' %>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <% }); %>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                            <% } %>
+                                            </div>
+                                        </div>
+                                        <% } %>
+
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

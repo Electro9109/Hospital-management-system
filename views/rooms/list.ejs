@@ -1,0 +1,81 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+                <% if (success) { %>
+                    <div class="alert alert-success">✅ <%= success %>
+                    </div>
+                    <% } %>
+                        <% if (error) { %>
+                            <div class="alert alert-error">⚠️ <%= error %>
+                            </div>
+                            <% } %>
+
+                                <div class="page-header">
+                                    <div>
+                                        <h2>Room Management</h2>
+                                        <p>View and manage hospital rooms</p>
+                                    </div>
+                                </div>
+
+                                <div class="table-container animate-in">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Room</th>
+                                                <th>Type</th>
+                                                <th>Department</th>
+                                                <th>Assigned Staff</th>
+                                                <th>Status</th>
+                                                <% if (['nurse','admin'].includes(user.role.toLowerCase())) { %>
+                                                    <th>Actions</th>
+                                                    <% } %>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% rooms.forEach(function(r) { %>
+                                                <tr>
+                                                    <td class="primary-text">#<%= r.ROOM_NUMBER %>
+                                                    </td>
+                                                    <td>
+                                                        <%= r.TYPE %>
+                                                    </td>
+                                                    <td>
+                                                        <%= r.DEPT_NAME || '—' %>
+                                                    </td>
+                                                    <td>
+                                                        <%= r.ASSIGNED_STAFF || '—' %>
+                                                    </td>
+                                                    <td><%- statusBadge(r.STATUS) %></td>
+                                                    <% if (['nurse','admin'].includes(user.role.toLowerCase())) { %>
+                                                        <td>
+                                                            <div class="d-flex gap-1">
+                                                                <form method="POST"
+                                                                    action="/rooms/<%= r.ROOM_ID %>/status"
+                                                                    style="display:flex;gap:4px;">
+                                                                    <select name="status" class="form-control"
+                                                                        style="max-width:140px;padding:6px 8px;font-size:0.78rem;">
+                                                                        <option value="available"
+                                                                            <%=r.STATUS==='available' ? 'selected' : ''
+                                                                            %>>Available</option>
+                                                                        <option value="occupied"
+                                                                            <%=r.STATUS==='occupied' ? 'selected' : ''
+                                                                            %>>Occupied</option>
+                                                                        <option value="under_maintenance"
+                                                                            <%=r.STATUS==='under_maintenance'
+                                                                            ? 'selected' : '' %>>Maintenance</option>
+                                                                    </select>
+                                                                    <button type="submit"
+                                                                        class="btn btn-sm btn-primary">Update</button>
+                                                                </form>
+                                                            </div>
+                                                        </td>
+                                                        <% } %>
+                                                </tr>
+                                                <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

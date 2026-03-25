@@ -1,0 +1,118 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+
+                <div class="page-header">
+                    <div>
+                        <h2>Write Prescription</h2>
+                        <p>For: <strong>
+                                <%= appt.PATIENT_NAME %>
+                            </strong> — Appointment #<%= appt.APPOINTMENT_ID %>
+                        </p>
+                    </div>
+                    <a href="/appointments/<%= appt.APPOINTMENT_ID %>" class="btn btn-secondary">← Back</a>
+                </div>
+
+                <!-- Patient Summary -->
+                <div class="detail-header animate-in">
+                    <div class="detail-avatar" style="background: var(--accent-primary);">
+                        <%= appt.PATIENT_NAME ? appt.PATIENT_NAME.charAt(0) : '?' %>
+                    </div>
+                    <div class="detail-info">
+                        <h2>
+                            <%= appt.PATIENT_NAME %>
+                        </h2>
+                        <div class="detail-meta">
+                            <% if (appt.GENDER) { %>
+                                <div class="detail-meta-item"><span class="meta-icon">👤</span><span>
+                                        <%= appt.GENDER %>
+                                    </span></div>
+                                <% } %>
+                                    <% if (appt.BLOOD_GROUP) { %>
+                                        <div class="detail-meta-item"><span class="meta-icon">🩸</span><span>
+                                                <%= appt.BLOOD_GROUP %>
+                                            </span></div>
+                                        <% } %>
+                                            <% if (appt.DOB) { %>
+                                                <div class="detail-meta-item"><span class="meta-icon">🎂</span><span>
+                                                        <%= formatDate(appt.DOB) %>
+                                                    </span></div>
+                                                <% } %>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card animate-in" style="max-width: 900px;">
+                    <form method="POST" action="/prescriptions/write/<%= appt.APPOINTMENT_ID %>">
+                        <div class="form-group">
+                            <label for="diagnosis">Diagnosis *</label>
+                            <textarea class="form-control" id="diagnosis" name="diagnosis" rows="3"
+                                placeholder="Enter diagnosis..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="notes">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="2"
+                                placeholder="Additional notes..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="follow_up">Follow-up Date</label>
+                            <input type="date" class="form-control" id="follow_up" name="follow_up"
+                                style="max-width: 250px;">
+                        </div>
+
+                        <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                            <h3 style="color: var(--text-heading); margin-bottom: 16px;">💊 Medicines</h3>
+                            <div id="medicines-container">
+                                <div class="medicine-row form-row" style="margin-bottom: 12px;">
+                                    <div class="form-group">
+                                        <label>Medicine</label>
+                                        <select class="form-control" name="medicine_ids">
+                                            <option value="">Select Medicine</option>
+                                            <% medicines.forEach(function(m) { %>
+                                                <option value="<%= m.MEDICINE_ID %>">
+                                                    <%= m.NAME %> — <%= m.DOSAGE_FORM %> (<%= m.STRENGTH %>) — ₹<%=
+                                                                    m.UNIT_PRICE %>
+                                                </option>
+                                                <% }); %>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Dosage</label>
+                                        <input type="text" class="form-control" name="dosages" placeholder="e.g. 500mg">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Frequency</label>
+                                        <input type="text" class="form-control" name="frequencies"
+                                            placeholder="e.g. Twice daily">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Duration</label>
+                                        <input type="text" class="form-control" name="durations"
+                                            placeholder="e.g. 5 days">
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="addMedicineRow()">+ Add
+                                Another Medicine</button>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success">Save Prescription</button>
+                            <a href="/appointments/<%= appt.APPOINTMENT_ID %>" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+
+                <script>
+                    function addMedicineRow() {
+                        const container = document.getElementById('medicines-container');
+                        const firstRow = container.querySelector('.medicine-row');
+                        const clone = firstRow.cloneNode(true);
+                        clone.querySelectorAll('input, select').forEach(el => el.value = '');
+                        container.appendChild(clone);
+                    }
+                </script>
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

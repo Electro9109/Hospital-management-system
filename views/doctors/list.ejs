@@ -1,0 +1,71 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+                <% if (success) { %>
+                    <div class="alert alert-success">✅ <%= success %>
+                    </div>
+                    <% } %>
+                        <% if (error) { %>
+                            <div class="alert alert-error">⚠️ <%= error %>
+                            </div>
+                            <% } %>
+
+                                <div class="page-header">
+                                    <div>
+                                        <h2>Doctor Management</h2>
+                                        <p>View and manage doctors</p>
+                                    </div>
+                                    <a href="/doctors/availability" class="btn btn-primary">📅 Manage Availability</a>
+                                </div>
+
+                                <div class="table-container animate-in">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>Specialization</th>
+                                                <th>Department</th>
+                                                <th>Phone</th>
+                                                <th>Fee</th>
+                                                <th>Account</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% if (doctors.length===0) { %>
+                                                <tr>
+                                                    <td colspan="7"
+                                                        style="text-align:center;padding:40px;color:var(--text-muted);">
+                                                        No doctors found</td>
+                                                </tr>
+                                                <% } %>
+                                                    <% doctors.forEach(function(d) { %>
+                                                        <tr>
+                                                            <td class="primary-text">#<%= d.DOCTOR_ID %>
+                                                            </td>
+                                                            <td class="primary-text">Dr. <%= d.NAME %>
+                                                            </td>
+                                                            <td>
+                                                                <%= d.SPECIALIZATION || '—' %>
+                                                            </td>
+                                                            <td>
+                                                                <%= d.DEPT_NAME || '—' %>
+                                                            </td>
+                                                            <td>
+                                                                <%= d.PHONE || '—' %>
+                                                            </td>
+                                                            <td style="color: var(--accent-green);">₹<%= d.FEE ?
+                                                                    Number(d.FEE).toLocaleString('en-IN') : '—' %>
+                                                            </td>
+                                                            <td>
+                                                                <%= d.USERNAME || '—' %>
+                                                            </td>
+                                                        </tr>
+                                                        <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

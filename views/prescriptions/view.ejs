@@ -1,0 +1,133 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+                <div class="page-header">
+                    <a href="/prescriptions" class="btn btn-secondary">← Back</a>
+                    <button onclick="printInvoice()" class="btn btn-primary">🖨️ Print</button>
+                </div>
+
+                <div class="invoice animate-in">
+                    <div class="invoice-header">
+                        <div>
+                            <h2 style="color: var(--text-heading); margin-bottom: 4px;">🏥 MediCare HMS</h2>
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">Hospital Management System</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <h3 style="color: var(--accent-primary);">PRESCRIPTION</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">#<%= prescription.PRESCRIPTION_ID
+                                    %>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="invoice-details">
+                        <div class="detail-block">
+                            <h4>Patient</h4>
+                            <p class="primary-text">
+                                <%= prescription.PATIENT_NAME %>
+                            </p>
+                            <p>
+                                <%= prescription.GENDER || '' %> | <%= prescription.BLOOD_GROUP || '' %>
+                            </p>
+                            <p>DOB: <%= formatDate(prescription.DOB) %>
+                            </p>
+                            <p>Phone: <%= prescription.PATIENT_PHONE || '—' %>
+                            </p>
+                        </div>
+                        <div class="detail-block">
+                            <h4>Doctor</h4>
+                            <p class="primary-text">Dr. <%= prescription.DOCTOR_NAME %>
+                            </p>
+                            <p>
+                                <%= prescription.SPECIALIZATION %>
+                            </p>
+                            <p>
+                                <%= prescription.DEPT_NAME || '' %>
+                            </p>
+                            <p>Date: <%= formatDate(prescription.DATE_OF_VISIT) %>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 24px;">
+                        <h4
+                            style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+                            Diagnosis</h4>
+                        <p class="primary-text">
+                            <%= prescription.DIAGNOSIS %>
+                        </p>
+                    </div>
+
+                    <% if (prescription.NOTES) { %>
+                        <div style="margin-bottom: 24px;">
+                            <h4
+                                style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+                                Notes</h4>
+                            <p>
+                                <%= prescription.NOTES %>
+                            </p>
+                        </div>
+                        <% } %>
+
+                            <% if (medicines.length> 0) { %>
+                                <h4
+                                    style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
+                                    Prescribed Medicines</h4>
+                                <div class="table-container" style="margin-bottom: 20px;">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Medicine</th>
+                                                <th>Form</th>
+                                                <th>Strength</th>
+                                                <th>Dosage</th>
+                                                <th>Frequency</th>
+                                                <th>Duration</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% medicines.forEach(function(m, idx) { %>
+                                                <tr>
+                                                    <td>
+                                                        <%= idx + 1 %>
+                                                    </td>
+                                                    <td class="primary-text">
+                                                        <%= m.MEDICINE_NAME %>
+                                                    </td>
+                                                    <td>
+                                                        <%= m.DOSAGE_FORM || '—' %>
+                                                    </td>
+                                                    <td>
+                                                        <%= m.STRENGTH || '—' %>
+                                                    </td>
+                                                    <td>
+                                                        <%= m.DOSAGE || '—' %>
+                                                    </td>
+                                                    <td>
+                                                        <%= m.FREQUENCY || '—' %>
+                                                    </td>
+                                                    <td>
+                                                        <%= m.DURATION || '—' %>
+                                                    </td>
+                                                </tr>
+                                                <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <% } %>
+
+                                    <% if (prescription.FOLLOW_UP) { %>
+                                        <div
+                                            style="padding: 16px; background: rgba(14,165,233,0.08); border-radius: var(--border-radius-sm); margin-top: 20px;">
+                                            <strong style="color: var(--accent-primary);">📅 Follow-up:</strong>
+                                            <span class="primary-text">
+                                                <%= formatDate(prescription.FOLLOW_UP) %>
+                                            </span>
+                                        </div>
+                                        <% } %>
+                </div>
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

@@ -1,0 +1,178 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+
+                <% if (success) { %>
+                    <div class="alert alert-success">✅ <%= success %>
+                    </div>
+                    <% } %>
+                        <% if (error) { %>
+                            <div class="alert alert-error">⚠️ <%= error %>
+                            </div>
+                            <% } %>
+
+                                <!-- Stats row -->
+                                <div class="stats-grid">
+                                    <div class="stat-card amber animate-in">
+                                        <div class="stat-icon">🚪</div>
+                                        <div class="stat-info">
+                                            <h4>
+                                                <%= floorRooms.length %>
+                                            </h4>
+                                            <p>Total Rooms</p>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card blue animate-in">
+                                        <div class="stat-icon">⚡</div>
+                                        <div class="stat-info">
+                                            <h4>
+                                                <%= activeAppts.length %>
+                                            </h4>
+                                            <p>Needs Attention</p>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card green animate-in">
+                                        <div class="stat-icon">🕐</div>
+                                        <div class="stat-info">
+                                            <h4>
+                                                <%= myShifts.length %>
+                                            </h4>
+                                            <p>Upcoming Shifts</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="content-grid">
+                                    <!-- Active Appointments needing workflow update -->
+                                    <div class="card animate-in">
+                                        <div class="card-header">
+                                            <h3>⚡ Needs Workflow Update</h3>
+                                        </div>
+                                        <% if (activeAppts.length===0) { %>
+                                            <div class="empty-state">
+                                                <div class="empty-icon">✅</div>
+                                                <h3>All caught up</h3>
+                                                <p>No appointments need workflow updates right now.</p>
+                                            </div>
+                                            <% } else { %>
+                                                <div class="table-container" style="border: none;">
+                                                    <table>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Patient</th>
+                                                                <th>Doctor</th>
+                                                                <th>Room</th>
+                                                                <th>Stage</th>
+                                                                <th>Action</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <% activeAppts.forEach(function(appt) { %>
+                                                                <tr>
+                                                                    <td class="primary-text">
+                                                                        <%= appt.PATIENT_NAME %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <%= appt.DOCTOR_NAME %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <%= appt.ROOM_NUMBER || '—' %>
+                                                                    </td>
+                                                                    <td><%- statusBadge(appt.WORKFLOW_STAGE) %></td>
+                                                                    <td>
+                                                                        <a href="/appointments/<%= appt.APPOINTMENT_ID %>"
+                                                                            class="btn btn-sm btn-primary">Update</a>
+                                                                    </td>
+                                                                </tr>
+                                                                <% }); %>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <% } %>
+                                    </div>
+
+                                    <!-- My Shifts -->
+                                    <div class="card animate-in">
+                                        <div class="card-header">
+                                            <h3>🕐 My Shifts This Week</h3>
+                                        </div>
+                                        <% if (myShifts.length===0) { %>
+                                            <div class="empty-state">
+                                                <div class="empty-icon">🕐</div>
+                                                <h3>No shifts scheduled</h3>
+                                                <p>No shifts assigned for the next 7 days.</p>
+                                            </div>
+                                            <% } else { %>
+                                                <div class="table-container" style="border: none;">
+                                                    <table>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Date</th>
+                                                                <th>Time</th>
+                                                                <th>Type</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <% myShifts.forEach(function(shift) { %>
+                                                                <tr>
+                                                                    <td class="primary-text">
+                                                                        <%= formatDate(shift.SHIFT_DATE) %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <%= formatTime(shift.START_TIME) %> — <%=
+                                                                                formatTime(shift.END_TIME) %>
+                                                                    </td>
+                                                                    <td><%- statusBadge(shift.SHIFT_TYPE) %></td>
+                                                                </tr>
+                                                                <% }); %>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <% } %>
+                                    </div>
+                                </div>
+
+                                <!-- Floor View -->
+                                <div class="card animate-in">
+                                    <div class="card-header">
+                                        <h3>🏥 Floor View — All Rooms</h3>
+                                        <a href="/rooms" class="btn btn-sm btn-secondary">Manage Rooms</a>
+                                    </div>
+                                    <div class="table-container" style="border: none;">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Room</th>
+                                                    <th>Type</th>
+                                                    <th>Department</th>
+                                                    <th>Assigned Staff</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% floorRooms.forEach(function(room) { %>
+                                                    <tr>
+                                                        <td class="primary-text">
+                                                            <%= room.ROOM_NUMBER %>
+                                                        </td>
+                                                        <td>
+                                                            <%= room.TYPE %>
+                                                        </td>
+                                                        <td>
+                                                            <%= room.DEPT_NAME || '—' %>
+                                                        </td>
+                                                        <td>
+                                                            <%= room.ASSIGNED_STAFF || '—' %>
+                                                        </td>
+                                                        <td><%- statusBadge(room.STATUS) %></td>
+                                                    </tr>
+                                                    <% }); %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

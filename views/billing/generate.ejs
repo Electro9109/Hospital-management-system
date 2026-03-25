@@ -1,0 +1,91 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+                <div class="page-header">
+                    <div>
+                        <h2>Generate Bill</h2>
+                        <p>Appointment #<%= appt.APPOINTMENT_ID %> — <%= appt.PATIENT_NAME %>
+                        </p>
+                    </div>
+                    <a href="/appointments/<%= appt.APPOINTMENT_ID %>" class="btn btn-secondary">← Back</a>
+                </div>
+
+                <div class="card animate-in" style="max-width: 700px;">
+                    <div class="card-header">
+                        <h3>💳 Bill Summary</h3>
+                    </div>
+
+                    <table style="margin-bottom: 20px;">
+                        <tr>
+                            <td style="padding: 10px 16px; color: var(--text-muted); width: 150px;">Patient</td>
+                            <td class="primary-text">
+                                <%= appt.PATIENT_NAME %>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 16px; color: var(--text-muted);">Doctor</td>
+                            <td>Dr. <%= appt.DOCTOR_NAME %> (<%= appt.SPECIALIZATION %>)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 16px; color: var(--text-muted);">Consultation Fee</td>
+                            <td class="primary-text">₹<%= Number(doctorFee).toLocaleString('en-IN') %>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <% if (medicines.length> 0) { %>
+                        <h4
+                            style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; margin: 16px 0 8px;">
+                            Medicine Charges</h4>
+                        <div class="table-container" style="margin-bottom: 16px;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Medicine</th>
+                                        <th>Unit Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% medicines.forEach(function(m) { %>
+                                        <tr>
+                                            <td>
+                                                <%= m.MEDICINE_NAME %>
+                                            </td>
+                                            <td>₹<%= Number(m.UNIT_PRICE || 0).toLocaleString('en-IN') %>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                        <% } %>
+
+                            <div class="invoice-total">
+                                <p style="color: var(--text-muted); font-size: 0.85rem;">Total Amount</p>
+                                <span class="total-amount">₹<%= Number(totalAmount).toLocaleString('en-IN') %></span>
+                            </div>
+
+                            <form method="POST" action="/billing/generate/<%= appt.APPOINTMENT_ID %>"
+                                style="margin-top: 24px;">
+                                <input type="hidden" name="total_amount" value="<%= totalAmount %>">
+                                <div class="form-group">
+                                    <label for="payment_method">Payment Method</label>
+                                    <select class="form-control" id="payment_method" name="payment_method"
+                                        style="max-width: 250px;" required>
+                                        <option value="Cash">Cash</option>
+                                        <option value="Card">Card</option>
+                                        <option value="UPI">UPI</option>
+                                        <option value="Insurance">Insurance</option>
+                                    </select>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-success">Confirm & Generate Bill</button>
+                                    <a href="/appointments/<%= appt.APPOINTMENT_ID %>"
+                                        class="btn btn-secondary">Cancel</a>
+                                </div>
+                            </form>
+                </div>
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

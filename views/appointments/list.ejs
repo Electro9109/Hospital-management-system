@@ -1,0 +1,94 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+
+                <% if (success) { %>
+                    <div class="alert alert-success">✅ <%= success %>
+                    </div>
+                    <% } %>
+                        <% if (error) { %>
+                            <div class="alert alert-error">⚠️ <%= error %>
+                            </div>
+                            <% } %>
+
+                                <div class="page-header">
+                                    <div>
+                                        <h2>
+                                            <%= pageTitle %>
+                                        </h2>
+                                        <p>Manage appointments and schedules</p>
+                                    </div>
+                                    <div class="page-actions">
+                                        <div class="search-bar">
+                                            <span class="search-icon">🔍</span>
+                                            <input type="text" placeholder="Search appointments..."
+                                                data-search=".appt-row">
+                                        </div>
+                                        <% if (['receptionist','admin'].includes(user.role.toLowerCase())) { %>
+                                            <a href="/appointments/book" class="btn btn-primary">+ Book Appointment</a>
+                                            <% } %>
+                                    </div>
+                                </div>
+
+                                <div class="table-container animate-in">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Date</th>
+                                                <th>Time</th>
+                                                <th>Patient</th>
+                                                <th>Doctor</th>
+                                                <th>Department</th>
+                                                <th>Room</th>
+                                                <th>Status</th>
+                                                <th>Stage</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% if (appointments.length===0) { %>
+                                                <tr>
+                                                    <td colspan="10"
+                                                        style="text-align:center; padding:40px; color: var(--text-muted);">
+                                                        No appointments found</td>
+                                                </tr>
+                                                <% } %>
+                                                    <% appointments.forEach(function(a) { %>
+                                                        <tr class="appt-row"
+                                                            data-href="/appointments/<%= a.APPOINTMENT_ID %>">
+                                                            <td class="primary-text">#<%= a.APPOINTMENT_ID %>
+                                                            </td>
+                                                            <td class="primary-text">
+                                                                <%= formatDate(a.DATE_OF_VISIT) %>
+                                                            </td>
+                                                            <td>
+                                                                <%= formatTime(a.START_TIME) %>
+                                                            </td>
+                                                            <td class="primary-text">
+                                                                <%= a.PATIENT_NAME %>
+                                                            </td>
+                                                            <td>Dr. <%= a.DOCTOR_NAME %>
+                                                            </td>
+                                                            <td>
+                                                                <%= a.DEPT_NAME || '—' %>
+                                                            </td>
+                                                            <td>
+                                                                <%= a.ROOM_NUMBER || '—' %>
+                                                            </td>
+                                                            <td><%- statusBadge(a.STATUS) %></td>
+                                                            <td><%- statusBadge(a.WORKFLOW_STAGE) %></td>
+                                                            <td>
+                                                                <a href="/appointments/<%= a.APPOINTMENT_ID %>"
+                                                                    class="btn btn-sm btn-secondary">View</a>
+                                                            </td>
+                                                        </tr>
+                                                        <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

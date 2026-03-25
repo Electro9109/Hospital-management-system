@@ -1,0 +1,175 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+
+                <% if (success) { %>
+                    <div class="alert alert-success">✅ <%= success %>
+                    </div>
+                    <% } %>
+                        <% if (error) { %>
+                            <div class="alert alert-error">⚠️ <%= error %>
+                            </div>
+                            <% } %>
+
+                                <!-- Doctor Info -->
+                                <div class="detail-header animate-in">
+                                    <div class="detail-avatar" style="background: var(--accent-green);">
+                                        🩺
+                                    </div>
+                                    <div class="detail-info">
+                                        <h2>Dr. <%= doctor.NAME || 'Unknown' %>
+                                        </h2>
+                                        <div class="detail-meta">
+                                            <div class="detail-meta-item">
+                                                <span class="meta-icon">🏥</span>
+                                                <span>
+                                                    <%= doctor.SPECIALIZATION || 'General' %>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stats -->
+                                <div class="stats-grid">
+                                    <div class="stat-card blue animate-in">
+                                        <div class="stat-icon">📅</div>
+                                        <div class="stat-info">
+                                            <h4>
+                                                <%= stats.todayTotal %>
+                                            </h4>
+                                            <p>Appointments Today</p>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card amber animate-in">
+                                        <div class="stat-icon">⏳</div>
+                                        <div class="stat-info">
+                                            <h4>
+                                                <%= stats.pendingConsult %>
+                                            </h4>
+                                            <p>Awaiting Consultation</p>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card green animate-in">
+                                        <div class="stat-icon">✅</div>
+                                        <div class="stat-info">
+                                            <h4>
+                                                <%= stats.completedToday %>
+                                            </h4>
+                                            <p>Completed Today</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Today's Patients -->
+                                <div class="content-grid">
+                                    <div class="card animate-in content-grid-full">
+                                        <div class="card-header">
+                                            <h3>📋 My Patients Today</h3>
+                                        </div>
+                                        <% if (myAppts.length===0) { %>
+                                            <div class="empty-state">
+                                                <div class="empty-icon">📋</div>
+                                                <h3>No appointments today</h3>
+                                                <p>Your schedule is clear for today.</p>
+                                            </div>
+                                            <% } else { %>
+                                                <div class="table-container" style="border: none;">
+                                                    <table>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Time</th>
+                                                                <th>Patient</th>
+                                                                <th>Gender</th>
+                                                                <th>Blood Group</th>
+                                                                <th>Room</th>
+                                                                <th>Stage</th>
+                                                                <th>Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <% myAppts.forEach(function(appt) { %>
+                                                                <tr>
+                                                                    <td class="primary-text">
+                                                                        <%= formatTime(appt.START_TIME) %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <a href="/patients/<%= appt.PATIENT_ID %>"
+                                                                            class="primary-text"
+                                                                            style="color: var(--accent-primary);">
+                                                                            <%= appt.PATIENT_NAME %>
+                                                                        </a>
+                                                                    </td>
+                                                                    <td>
+                                                                        <%= appt.GENDER || '—' %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <%= appt.BLOOD_GROUP || '—' %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <%= appt.ROOM_NUMBER || '—' %>
+                                                                    </td>
+                                                                    <td><%- statusBadge(appt.WORKFLOW_STAGE) %></td>
+                                                                    <td>
+                                                                        <div class="d-flex gap-1">
+                                                                            <a href="/appointments/<%= appt.APPOINTMENT_ID %>"
+                                                                                class="btn btn-sm btn-secondary">View</a>
+                                                                            <% if
+                                                                                (['triage','checked-in'].includes((appt.WORKFLOW_STAGE
+                                                                                || '' ).toLowerCase())) { %>
+                                                                                <a href="/prescriptions/write/<%= appt.APPOINTMENT_ID %>"
+                                                                                    class="btn btn-sm btn-success">Write
+                                                                                    Rx</a>
+                                                                                <% } %>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                <% }); %>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <% } %>
+                                    </div>
+                                </div>
+
+                                <!-- Upcoming -->
+                                <% if (upcomingAppts.length> 0) { %>
+                                    <div class="card animate-in">
+                                        <div class="card-header">
+                                            <h3>📆 Upcoming (Next 7 Days)</h3>
+                                        </div>
+                                        <div class="table-container" style="border: none;">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Time</th>
+                                                        <th>Patient</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <% upcomingAppts.forEach(function(appt) { %>
+                                                        <tr data-href="/appointments/<%= appt.APPOINTMENT_ID %>">
+                                                            <td class="primary-text">
+                                                                <%= formatDate(appt.DATE_OF_VISIT) %>
+                                                            </td>
+                                                            <td>
+                                                                <%= formatTime(appt.START_TIME) %>
+                                                            </td>
+                                                            <td>
+                                                                <%= appt.PATIENT_NAME %>
+                                                            </td>
+                                                            <td><%- statusBadge(appt.STATUS) %></td>
+                                                        </tr>
+                                                        <% }); %>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <% } %>
+
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

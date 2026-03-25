@@ -1,0 +1,76 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+                <% if (success) { %>
+                    <div class="alert alert-success">✅ <%= success %>
+                    </div>
+                    <% } %>
+                        <% if (error) { %>
+                            <div class="alert alert-error">⚠️ <%= error %>
+                            </div>
+                            <% } %>
+
+                                <div class="page-header">
+                                    <div>
+                                        <h2>Billing</h2>
+                                        <p>Manage bills and invoices</p>
+                                    </div>
+                                    <div class="search-bar">
+                                        <span class="search-icon">🔍</span>
+                                        <input type="text" placeholder="Search bills..." data-search=".bill-row">
+                                    </div>
+                                </div>
+
+                                <div class="table-container animate-in">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Bill ID</th>
+                                                <th>Date</th>
+                                                <th>Patient</th>
+                                                <th>Appointment</th>
+                                                <th>Amount</th>
+                                                <th>Method</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% if (bills.length===0) { %>
+                                                <tr>
+                                                    <td colspan="8"
+                                                        style="text-align:center;padding:40px;color:var(--text-muted);">
+                                                        No bills found</td>
+                                                </tr>
+                                                <% } %>
+                                                    <% bills.forEach(function(b) { %>
+                                                        <tr class="bill-row">
+                                                            <td class="primary-text">#<%= b.BILL_ID %>
+                                                            </td>
+                                                            <td>
+                                                                <%= formatDate(b.GENERATED_AT) %>
+                                                            </td>
+                                                            <td class="primary-text">
+                                                                <%= b.PATIENT_NAME %>
+                                                            </td>
+                                                            <td>#<%= b.APPOINTMENT_ID %>
+                                                            </td>
+                                                            <td class="primary-text"
+                                                                style="color: var(--accent-green);">₹<%=
+                                                                    Number(b.TOTAL_AMOUNT).toLocaleString('en-IN') %>
+                                                            </td>
+                                                            <td>
+                                                                <%= b.PAYMENT_METHOD || '—' %>
+                                                            </td>
+                                                            <td><%- statusBadge(b.PAYMENT_STATUS) %></td>
+                                                            <td><a href="/billing/<%= b.BILL_ID %>"
+                                                                    class="btn btn-sm btn-secondary">Invoice</a></td>
+                                                        </tr>
+                                                        <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

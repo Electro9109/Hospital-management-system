@@ -1,0 +1,78 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+                <% if (success) { %>
+                    <div class="alert alert-success">✅ <%= success %>
+                    </div>
+                    <% } %>
+                        <% if (error) { %>
+                            <div class="alert alert-error">⚠️ <%= error %>
+                            </div>
+                            <% } %>
+
+                                <div class="page-header">
+                                    <div>
+                                        <h2>Prescriptions</h2>
+                                        <p>View all prescriptions</p>
+                                    </div>
+                                    <div class="search-bar">
+                                        <span class="search-icon">🔍</span>
+                                        <input type="text" placeholder="Search prescriptions..."
+                                            data-search=".presc-row">
+                                    </div>
+                                </div>
+
+                                <div class="table-container animate-in">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Date</th>
+                                                <th>Patient</th>
+                                                <th>Doctor</th>
+                                                <th>Diagnosis</th>
+                                                <th>Follow-up</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% if (prescriptions.length===0) { %>
+                                                <tr>
+                                                    <td colspan="7"
+                                                        style="text-align:center;padding:40px;color:var(--text-muted);">
+                                                        No prescriptions found</td>
+                                                </tr>
+                                                <% } %>
+                                                    <% prescriptions.forEach(function(pr) { %>
+                                                        <tr class="presc-row">
+                                                            <td class="primary-text">#<%= pr.PRESCRIPTION_ID %>
+                                                            </td>
+                                                            <td>
+                                                                <%= formatDate(pr.DATE_OF_VISIT) %>
+                                                            </td>
+                                                            <td class="primary-text">
+                                                                <%= pr.PATIENT_NAME %>
+                                                            </td>
+                                                            <td>Dr. <%= pr.DOCTOR_NAME %>
+                                                            </td>
+                                                            <td>
+                                                                <%= pr.DIAGNOSIS ? (pr.DIAGNOSIS.length> 40 ?
+                                                                    pr.DIAGNOSIS.substring(0,40)+'...' : pr.DIAGNOSIS) :
+                                                                    '—' %>
+                                                            </td>
+                                                            <td>
+                                                                <%= formatDate(pr.FOLLOW_UP) %>
+                                                            </td>
+                                                            <td>
+                                                                <a href="/prescriptions/<%= pr.PRESCRIPTION_ID %>"
+                                                                    class="btn btn-sm btn-secondary">View</a>
+                                                            </td>
+                                                        </tr>
+                                                        <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

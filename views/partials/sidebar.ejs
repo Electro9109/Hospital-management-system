@@ -1,0 +1,94 @@
+<% const role=user ? user.role.toLowerCase() : '' ; const currentPath=typeof currentPage !=='undefined' ? currentPage
+    : '' ; // Sidebar config per role const sidebarConfig={ receptionist: [ { section: 'Main' , items: [ {
+    label: 'Dashboard' , icon: '🏠' , path: '/dashboard' , id: 'dashboard' }, { label: 'Patients' , icon: '👤' ,
+    path: '/patients' , id: 'patients' }, { label: 'Appointments' , icon: '📅' , path: '/appointments' ,
+    id: 'appointments' }, ]}, { section: 'Operations' , items: [ { label: 'Rooms' , icon: '🚪' , path: '/rooms' ,
+    id: 'rooms' }, { label: 'Prescriptions' , icon: '💊' , path: '/prescriptions' , id: 'prescriptions' }, {
+    label: 'Billing' , icon: '💳' , path: '/billing' , id: 'billing' }, ]} ], doctor: [ { section: 'Main' , items: [ {
+    label: 'Dashboard' , icon: '🏠' , path: '/dashboard' , id: 'dashboard' }, { label: 'My Appointments' , icon: '📅' ,
+    path: '/appointments' , id: 'appointments' }, ]}, { section: 'Clinical' , items: [ { label: 'Patients' , icon: '👤'
+    , path: '/patients' , id: 'patients' }, { label: 'Prescriptions' , icon: '💊' , path: '/prescriptions' ,
+    id: 'prescriptions' }, { label: 'My Profile' , icon: '🩺' , path: '/doctors/profile' , id: 'doctors' }, ]} ], nurse:
+    [ { section: 'Main' , items: [ { label: 'Dashboard' , icon: '🏠' , path: '/dashboard' , id: 'dashboard' }, {
+    label: 'Rooms' , icon: '🚪' , path: '/rooms' , id: 'rooms' }, { label: 'Appointments' , icon: '📅' ,
+    path: '/appointments' , id: 'appointments' }, ]}, { section: 'My Schedule' , items: [ { label: 'Patients' ,
+    icon: '👤' , path: '/patients' , id: 'patients' }, { label: 'Prescriptions' , icon: '💊' , path: '/prescriptions' ,
+    id: 'prescriptions' }, { label: 'My Shifts' , icon: '🕐' , path: '/staff/shifts' , id: 'staff' }, ]} ], admin: [ {
+    section: 'Main' , items: [ { label: 'Dashboard' , icon: '🏠' , path: '/dashboard' , id: 'dashboard' }, {
+    label: 'Patients' , icon: '👤' , path: '/patients' , id: 'patients' }, { label: 'Appointments' , icon: '📅' ,
+    path: '/appointments' , id: 'appointments' }, ]}, { section: 'Management' , items: [ { label: 'Rooms' , icon: '🚪' ,
+    path: '/rooms' , id: 'rooms' }, { label: 'Prescriptions' , icon: '💊' , path: '/prescriptions' , id: 'prescriptions'
+    }, { label: 'Billing' , icon: '💳' , path: '/billing' , id: 'billing' }, ]}, { section: 'Administration' , items: [
+    { label: 'Doctors' , icon: '🩺' , path: '/doctors' , id: 'doctors' }, { label: 'Staff & Shifts' , icon: '👥' ,
+    path: '/staff' , id: 'staff' }, { label: 'Departments' , icon: '🏢' , path: '/departments' , id: 'departments' }, ]}
+    ] }; const sections=sidebarConfig[role] || []; const roleLabels={ admin: 'Administrator' ,
+    receptionist: 'Receptionist' , doctor: 'Doctor' , nurse: 'Nurse' }; const roleColors={ admin: '#8b5cf6' ,
+    receptionist: '#0ea5e9' , doctor: '#10b981' , nurse: '#f59e0b' }; %>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="logo-icon">🏥</div>
+            <div class="brand-text">
+                <span class="brand-name">MediCare</span>
+                <span class="brand-subtitle">Hospital System</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <% sections.forEach(function(section) { %>
+                <div class="nav-section">
+                    <div class="nav-section-title">
+                        <%= section.section %>
+                    </div>
+                    <% section.items.forEach(function(item) { %>
+                        <a href="<%= item.path %>" class="nav-item <%= currentPath === item.id ? 'active' : '' %>"
+                            id="nav-<%= item.id %>">
+                            <span class="nav-icon">
+                                <%= item.icon %>
+                            </span>
+                            <span class="nav-label">
+                                <%= item.label %>
+                            </span>
+                        </a>
+                        <% }); %>
+                </div>
+                <% }); %>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="role-indicator">
+                <span class="role-dot" style="background: <%= roleColors[role] || '#64748b' %>"></span>
+                <span>Logged in as <strong>
+                        <%= roleLabels[role] || role %>
+                    </strong></span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Top Header -->
+    <header class="header">
+        <div class="header-left">
+            <h1>
+                <%= typeof pageTitle !=='undefined' ? pageTitle : 'Dashboard' %>
+            </h1>
+        </div>
+        <div class="header-right">
+            <div class="user-badge">
+                <div class="avatar" style="background: <%= roleColors[role] || '#64748b' %>">
+                    <%= user.username ? user.username.charAt(0).toUpperCase() : '?' %>
+                </div>
+                <div class="user-info">
+                    <span class="user-name">
+                        <%= user.username %>
+                    </span>
+                    <span class="user-role">
+                        <%= roleLabels[role] || role %>
+                    </span>
+                </div>
+            </div>
+            <a href="/logout" class="btn-logout">
+                ⏻ Logout
+            </a>
+        </div>
+    </header>

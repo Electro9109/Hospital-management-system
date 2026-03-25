@@ -1,0 +1,87 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+
+                <div class="page-header">
+                    <div>
+                        <h2>Book Appointment</h2>
+                        <p>Schedule a new appointment</p>
+                    </div>
+                    <a href="/appointments" class="btn btn-secondary">← Back</a>
+                </div>
+
+                <div class="card animate-in" style="max-width: 800px;">
+                    <form method="POST" action="/appointments/book">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="patient_id">Patient *</label>
+                                <select class="form-control" id="patient_id" name="patient_id" required>
+                                    <option value="">Select Patient</option>
+                                    <% patients.forEach(function(p) { %>
+                                        <option value="<%= p.PATIENT_ID %>">
+                                            <%= p.NAME %> (#<%= p.PATIENT_ID %>)
+                                        </option>
+                                        <% }); %>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="doctor_id">Doctor *</label>
+                                <select class="form-control" id="doctor_id" name="doctor_id" required>
+                                    <option value="">Select Doctor</option>
+                                    <% doctors.forEach(function(d) { %>
+                                        <option value="<%= d.DOCTOR_ID %>">Dr. <%= d.NAME %> — <%= d.SPECIALIZATION %> (
+                                                    <%= d.DEPT_NAME || 'N/A' %>)</option>
+                                        <% }); %>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="date">Date *</label>
+                                <input type="date" class="form-control" id="date" name="date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="start_time">Start Time *</label>
+                                <input type="text" class="form-control" id="start_time" name="start_time"
+                                    placeholder="e.g. 09:00" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="end_time">End Time</label>
+                                <input type="text" class="form-control" id="end_time" name="end_time"
+                                    placeholder="e.g. 09:30">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="room_id">Room (Optional)</label>
+                                <select class="form-control" id="room_id" name="room_id">
+                                    <option value="">No Room</option>
+                                    <% rooms.forEach(function(r) { %>
+                                        <option value="<%= r.ROOM_ID %>">#<%= r.ROOM_NUMBER %> — <%= r.TYPE %> (<%=
+                                                        r.DEPT_NAME || 'N/A' %>)</option>
+                                        <% }); %>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="staff_id">Assigned Staff (Optional)</label>
+                                <select class="form-control" id="staff_id" name="staff_id">
+                                    <option value="">None</option>
+                                    <% staffList.forEach(function(s) { %>
+                                        <option value="<%= s.STAFF_ID %>">
+                                            <%= s.NAME %> (<%= s.ROLE %>)
+                                        </option>
+                                        <% }); %>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Book Appointment</button>
+                            <a href="/appointments" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

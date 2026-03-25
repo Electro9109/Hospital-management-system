@@ -1,0 +1,70 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+                <% if (success) { %>
+                    <div class="alert alert-success">✅ <%= success %>
+                    </div>
+                    <% } %>
+                        <% if (error) { %>
+                            <div class="alert alert-error">⚠️ <%= error %>
+                            </div>
+                            <% } %>
+
+                                <div class="page-header">
+                                    <div>
+                                        <h2>Staff Management</h2>
+                                        <p>View and manage hospital staff</p>
+                                    </div>
+                                    <a href="/staff/shifts" class="btn btn-primary">📅 Manage Shifts</a>
+                                </div>
+
+                                <div class="table-container animate-in">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>Role</th>
+                                                <th>Department</th>
+                                                <th>Phone</th>
+                                                <th>Hire Date</th>
+                                                <th>User Account</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% if (staffList.length===0) { %>
+                                                <tr>
+                                                    <td colspan="7"
+                                                        style="text-align:center;padding:40px;color:var(--text-muted);">
+                                                        No staff found</td>
+                                                </tr>
+                                                <% } %>
+                                                    <% staffList.forEach(function(s) { %>
+                                                        <tr>
+                                                            <td class="primary-text">#<%= s.STAFF_ID %>
+                                                            </td>
+                                                            <td class="primary-text">
+                                                                <%= s.NAME %>
+                                                            </td>
+                                                            <td><%- statusBadge(s.ROLE) %></td>
+                                                            <td>
+                                                                <%= s.DEPT_NAME || '—' %>
+                                                            </td>
+                                                            <td>
+                                                                <%= s.PHONE || '—' %>
+                                                            </td>
+                                                            <td>
+                                                                <%= formatDate(s.HIRE_DATE) %>
+                                                            </td>
+                                                            <td>
+                                                                <%= s.USERNAME || '—' %>
+                                                            </td>
+                                                        </tr>
+                                                        <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

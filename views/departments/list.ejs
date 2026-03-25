@@ -1,0 +1,97 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+                <% if (success) { %>
+                    <div class="alert alert-success">✅ <%= success %>
+                    </div>
+                    <% } %>
+                        <% if (error) { %>
+                            <div class="alert alert-error">⚠️ <%= error %>
+                            </div>
+                            <% } %>
+
+                                <div class="page-header">
+                                    <div>
+                                        <h2>Departments</h2>
+                                        <p>Manage hospital departments</p>
+                                    </div>
+                                </div>
+
+                                <!-- Add Department -->
+                                <div class="card animate-in mb-3">
+                                    <div class="card-header">
+                                        <h3>➕ Add Department</h3>
+                                    </div>
+                                    <form method="POST" action="/departments">
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="dept_name">Name *</label>
+                                                <input type="text" class="form-control" id="dept_name" name="dept_name"
+                                                    placeholder="Department name" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="location">Location</label>
+                                                <input type="text" class="form-control" id="location" name="location"
+                                                    placeholder="e.g. Building A, Wing 2">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="floor_no">Floor</label>
+                                                <input type="number" class="form-control" id="floor_no" name="floor_no"
+                                                    placeholder="1">
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary" style="margin-top: 8px;">Create
+                                            Department</button>
+                                    </form>
+                                </div>
+
+                                <!-- Department List -->
+                                <div class="table-container animate-in">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Department</th>
+                                                <th>Location</th>
+                                                <th>Floor</th>
+                                                <th>Doctors</th>
+                                                <th>Staff</th>
+                                                <th>Rooms</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% if (departments.length===0) { %>
+                                                <tr>
+                                                    <td colspan="6"
+                                                        style="text-align:center;padding:40px;color:var(--text-muted);">
+                                                        No departments found</td>
+                                                </tr>
+                                                <% } %>
+                                                    <% departments.forEach(function(d) { %>
+                                                        <tr>
+                                                            <td class="primary-text">
+                                                                <%= d.DEPT_NAME %>
+                                                            </td>
+                                                            <td>
+                                                                <%= d.LOCATION || '—' %>
+                                                            </td>
+                                                            <td>
+                                                                <%= d.FLOOR_NO || '—' %>
+                                                            </td>
+                                                            <td><span class="badge badge-info">
+                                                                    <%= d.DOCTOR_COUNT %>
+                                                                </span></td>
+                                                            <td><span class="badge badge-purple">
+                                                                    <%= d.STAFF_COUNT %>
+                                                                </span></td>
+                                                            <td><span class="badge badge-success">
+                                                                    <%= d.ROOM_COUNT %>
+                                                                </span></td>
+                                                        </tr>
+                                                        <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

@@ -1,0 +1,82 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+                <div class="page-header">
+                    <div>
+                        <h2>My Profile</h2>
+                        <p>Your doctor profile and schedule</p>
+                    </div>
+                </div>
+
+                <div class="detail-header animate-in">
+                    <div class="detail-avatar" style="background: var(--accent-green);">🩺</div>
+                    <div class="detail-info">
+                        <h2>Dr. <%= doctor.NAME || 'Unknown' %>
+                        </h2>
+                        <div class="detail-meta">
+                            <div class="detail-meta-item"><span class="meta-icon">🏥</span><span>
+                                    <%= doctor.SPECIALIZATION || '—' %>
+                                </span></div>
+                            <div class="detail-meta-item"><span class="meta-icon">🏢</span><span>
+                                    <%= doctor.DEPT_NAME || '—' %>
+                                </span></div>
+                            <% if (doctor.PHONE) { %>
+                                <div class="detail-meta-item"><span class="meta-icon">📞</span><span>
+                                        <%= doctor.PHONE %>
+                                    </span></div>
+                                <% } %>
+                                    <% if (doctor.FEE) { %>
+                                        <div class="detail-meta-item"><span class="meta-icon">💰</span><span>₹<%=
+                                                    Number(doctor.FEE).toLocaleString('en-IN') %> per visit</span></div>
+                                        <% } %>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card animate-in">
+                    <div class="card-header">
+                        <h3>📅 My Availability Schedule</h3>
+                    </div>
+                    <% if (availability.length===0) { %>
+                        <div class="empty-state">
+                            <div class="empty-icon">📅</div>
+                            <h3>No availability set</h3>
+                            <p>Ask admin to set your availability schedule.</p>
+                        </div>
+                        <% } else { %>
+                            <div class="table-container" style="border: none;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Day</th>
+                                            <th>Start</th>
+                                            <th>End</th>
+                                            <th>Slot Duration</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% availability.forEach(function(a) { %>
+                                            <tr>
+                                                <td class="primary-text">
+                                                    <%= a.DAY %>
+                                                </td>
+                                                <td>
+                                                    <%= formatTime(a.START_TIME) %>
+                                                </td>
+                                                <td>
+                                                    <%= formatTime(a.END_TIME) %>
+                                                </td>
+                                                <td>
+                                                    <%= a.SLOT_MINS %> min
+                                                </td>
+                                            </tr>
+                                            <% }); %>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <% } %>
+                </div>
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

@@ -1,0 +1,200 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+
+                <% if (success) { %>
+                    <div class="alert alert-success">✅ <%= success %>
+                    </div>
+                    <% } %>
+                        <% if (error) { %>
+                            <div class="alert alert-error">⚠️ <%= error %>
+                            </div>
+                            <% } %>
+
+                                <!-- Stats -->
+                                <div class="stats-grid">
+                                    <div class="stat-card blue animate-in">
+                                        <div class="stat-icon">👤</div>
+                                        <div class="stat-info">
+                                            <h4>
+                                                <%= stats.totalPatients %>
+                                            </h4>
+                                            <p>Total Patients</p>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card green animate-in">
+                                        <div class="stat-icon">🩺</div>
+                                        <div class="stat-info">
+                                            <h4>
+                                                <%= stats.totalDoctors %>
+                                            </h4>
+                                            <p>Doctors</p>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card amber animate-in">
+                                        <div class="stat-icon">👥</div>
+                                        <div class="stat-info">
+                                            <h4>
+                                                <%= stats.totalStaff %>
+                                            </h4>
+                                            <p>Staff Members</p>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card purple animate-in">
+                                        <div class="stat-icon">📅</div>
+                                        <div class="stat-info">
+                                            <h4>
+                                                <%= stats.todayAppointments %>
+                                            </h4>
+                                            <p>Appointments Today</p>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card pink animate-in">
+                                        <div class="stat-icon">🚪</div>
+                                        <div class="stat-info">
+                                            <h4>
+                                                <%= stats.availableRooms %>/<%= stats.totalRooms %>
+                                            </h4>
+                                            <p>Rooms Available</p>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card red animate-in">
+                                        <div class="stat-icon">💰</div>
+                                        <div class="stat-info">
+                                            <h4>₹<%= Number(stats.revenue).toLocaleString('en-IN') %>
+                                            </h4>
+                                            <p>Revenue This Month</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Quick Actions -->
+                                <div class="card animate-in mb-3">
+                                    <div class="card-header">
+                                        <h3>⚡ Quick Actions</h3>
+                                    </div>
+                                    <div class="quick-actions">
+                                        <a href="/patients" class="quick-action-card">
+                                            <div class="action-icon">👤</div>
+                                            <span class="action-label">Manage Patients</span>
+                                        </a>
+                                        <a href="/doctors" class="quick-action-card">
+                                            <div class="action-icon">🩺</div>
+                                            <span class="action-label">Manage Doctors</span>
+                                        </a>
+                                        <a href="/staff" class="quick-action-card">
+                                            <div class="action-icon">👥</div>
+                                            <span class="action-label">Staff & Shifts</span>
+                                        </a>
+                                        <a href="/departments" class="quick-action-card">
+                                            <div class="action-icon">🏢</div>
+                                            <span class="action-label">Departments</span>
+                                        </a>
+                                        <a href="/billing" class="quick-action-card">
+                                            <div class="action-icon">💳</div>
+                                            <span class="action-label">Billing</span>
+                                        </a>
+                                        <a href="/rooms" class="quick-action-card">
+                                            <div class="action-icon">🚪</div>
+                                            <span class="action-label">Room Management</span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="content-grid">
+                                    <!-- Department Overview -->
+                                    <div class="card animate-in">
+                                        <div class="card-header">
+                                            <h3>🏢 Departments</h3>
+                                            <a href="/departments" class="btn btn-sm btn-secondary">Manage</a>
+                                        </div>
+                                        <div class="table-container" style="border: none;">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Department</th>
+                                                        <th>Location</th>
+                                                        <th>Floor</th>
+                                                        <th>Doctors</th>
+                                                        <th>Staff</th>
+                                                        <th>Rooms</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <% departments.forEach(function(dept) { %>
+                                                        <tr>
+                                                            <td class="primary-text">
+                                                                <%= dept.DEPT_NAME %>
+                                                            </td>
+                                                            <td>
+                                                                <%= dept.LOCATION || '—' %>
+                                                            </td>
+                                                            <td>
+                                                                <%= dept.FLOOR_NO || '—' %>
+                                                            </td>
+                                                            <td>
+                                                                <%= dept.DOCTOR_COUNT %>
+                                                            </td>
+                                                            <td>
+                                                                <%= dept.STAFF_COUNT %>
+                                                            </td>
+                                                            <td>
+                                                                <%= dept.ROOM_COUNT %>
+                                                            </td>
+                                                        </tr>
+                                                        <% }); %>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- Recent Appointments -->
+                                    <div class="card animate-in">
+                                        <div class="card-header">
+                                            <h3>📅 Recent Appointments</h3>
+                                            <a href="/appointments" class="btn btn-sm btn-secondary">View All</a>
+                                        </div>
+                                        <% if (recentAppts.length===0) { %>
+                                            <div class="empty-state">
+                                                <div class="empty-icon">📅</div>
+                                                <h3>No recent appointments</h3>
+                                            </div>
+                                            <% } else { %>
+                                                <div class="table-container" style="border: none;">
+                                                    <table>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>ID</th>
+                                                                <th>Patient</th>
+                                                                <th>Doctor</th>
+                                                                <th>Status</th>
+                                                                <th>Stage</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <% recentAppts.forEach(function(appt) { %>
+                                                                <tr
+                                                                    data-href="/appointments/<%= appt.APPOINTMENT_ID %>">
+                                                                    <td class="primary-text">#<%= appt.APPOINTMENT_ID %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <%= appt.PATIENT_NAME %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <%= appt.DOCTOR_NAME %>
+                                                                    </td>
+                                                                    <td><%- statusBadge(appt.STATUS) %></td>
+                                                                    <td><%- statusBadge(appt.WORKFLOW_STAGE) %></td>
+                                                                </tr>
+                                                                <% }); %>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <% } %>
+                                    </div>
+                                </div>
+
+            </main>
+    </div>
+    <%- include('../partials/footer') %>

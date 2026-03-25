@@ -1,0 +1,94 @@
+<%- include('../partials/header') %>
+    <div class="app-layout">
+        <%- include('../partials/sidebar') %>
+            <main class="main-content">
+                <div class="page-header">
+                    <a href="/billing" class="btn btn-secondary">← Back</a>
+                    <button onclick="printInvoice()" class="btn btn-primary">🖨️ Print Invoice</button>
+                </div>
+
+                <div class="invoice animate-in">
+                    <div class="invoice-header">
+                        <div>
+                            <h2 style="color: var(--text-heading); margin-bottom: 4px;">🏥 MediCare HMS</h2>
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">Hospital Management System</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <h3 style="color: var(--accent-primary);">INVOICE</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">#<%= bill.BILL_ID %>
+                            </p>
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">Date: <%=
+                                    formatDate(bill.GENERATED_AT) %>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="invoice-details">
+                        <div class="detail-block">
+                            <h4>Billed To</h4>
+                            <p class="primary-text">
+                                <%= bill.PATIENT_NAME %>
+                            </p>
+                            <p>Phone: <%= bill.PHONE || '—' %>
+                            </p>
+                            <p>Email: <%= bill.EMAIL || '—' %>
+                            </p>
+                        </div>
+                        <div class="detail-block">
+                            <h4>Attending Doctor</h4>
+                            <p class="primary-text">Dr. <%= bill.DOCTOR_NAME %>
+                            </p>
+                            <p>
+                                <%= bill.SPECIALIZATION %>
+                            </p>
+                            <p>
+                                <%= bill.DEPT_NAME || '' %>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="table-container" style="margin-bottom: 20px;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th style="text-align:right;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="primary-text">Consultation Fee — Dr. <%= bill.DOCTOR_NAME %>
+                                    </td>
+                                    <td style="text-align:right;">₹<%= Number(bill.DOCTOR_FEE ||
+                                            0).toLocaleString('en-IN') %>
+                                    </td>
+                                </tr>
+                                <% medicines.forEach(function(m) { %>
+                                    <tr>
+                                        <td>
+                                            <%= m.MEDICINE_NAME %> (<%= m.DOSAGE_FORM || '' %>)
+                                        </td>
+                                        <td style="text-align:right;">₹<%= Number(m.UNIT_PRICE ||
+                                                0).toLocaleString('en-IN') %>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="invoice-total">
+                        <p style="color: var(--text-muted); font-size: 0.85rem;">Payment Method: <%= bill.PAYMENT_METHOD
+                                || '—' %>
+                        </p>
+                        <p style="color: var(--text-muted); font-size: 0.85rem;">Status: <%-
+                                statusBadge(bill.PAYMENT_STATUS) %></p>
+                        <div style="margin-top: 8px;">
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">Total: </span>
+                            <span class="total-amount">₹<%= Number(bill.TOTAL_AMOUNT).toLocaleString('en-IN') %></span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+    </div>
+    <%- include('../partials/footer') %>
