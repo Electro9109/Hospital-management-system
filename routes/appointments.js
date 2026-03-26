@@ -66,7 +66,7 @@ router.get('/book', requireAuth, requireRole('receptionist', 'admin'), async (re
             ORDER BY d.NAME
         `);
         const rooms = await db.execute(`
-            SELECT r.ROOM_ID, r.ROOM_NUMBER, r.TYPE, dep.DEPT_NAME
+            SELECT r.ROOM_ID, r.ROOM_NUMBER, r.ROOM_TYPE, dep.DEPT_NAME
             FROM ROOM r
             LEFT JOIN DEPARTMENT dep ON r.DEPARTMENT_ID = dep.DEPARTMENT_ID
             WHERE LOWER(r.STATUS) = 'available'
@@ -123,7 +123,7 @@ router.get('/:id', requireAuth, async (req, res) => {
             SELECT a.*, p.NAME AS PATIENT_NAME, p.PATIENT_ID, p.PHONE AS PATIENT_PHONE, 
                    p.GENDER, p.BLOOD_GROUP, p.DOB,
                    d.NAME AS DOCTOR_NAME, d.SPECIALIZATION,
-                   dep.DEPT_NAME, r.ROOM_NUMBER, r.TYPE AS ROOM_TYPE,
+                   dep.DEPT_NAME, r.ROOM_NUMBER, r.ROOM_TYPE,
                    s.NAME AS STAFF_NAME
             FROM APPOINTMENT a
             JOIN PATIENT p ON a.PATIENT_ID = p.PATIENT_ID

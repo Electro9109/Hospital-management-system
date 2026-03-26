@@ -150,7 +150,7 @@ router.post('/write/:appointmentId', requireAuth, requireRole('doctor', 'admin')
 router.get('/:id', requireAuth, async (req, res) => {
     try {
         const presc = await db.execute(`
-            SELECT pr.*, a.DATE_OF_VISIT, a.APPOINTMENT_ID,
+            SELECT pr.*, a.APPOINTMENT_DATE, a.APPOINTMENT_ID,
                    p.NAME AS PATIENT_NAME, p.GENDER, p.BLOOD_GROUP, p.DOB, p.PHONE AS PATIENT_PHONE,
                    d.NAME AS DOCTOR_NAME, d.SPECIALIZATION, dep.DEPT_NAME
             FROM PRESCRIPTION pr

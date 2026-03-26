@@ -1,63 +1,56 @@
 /* ============================================================
-   Hospital Management System — Design System
-   Premium dark theme with glassmorphism, smooth animations
+   Hospital Management System — Clean & Professional Design
+   Simple, functional interface for medical staff
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap');
 
 /* ============================================================
    CSS Custom Properties (Design Tokens)
    ============================================================ */
 :root {
-    /* Color Palette */
-    --bg-primary: #0f1117;
-    --bg-secondary: #1a1f2e;
-    --bg-card: #1e2435;
-    --bg-card-hover: #252d42;
-    --bg-input: #161b28;
-    --bg-sidebar: #141820;
+    /* Color Palette - Clean & Professional */
+    --bg-primary: #f5f5f5;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #fafafa;
+    --bg-input: #ffffff;
+    --bg-sidebar: #2c3e50;
 
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --text-heading: #e2e8f0;
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --text-muted: #95a5a6;
+    --text-heading: #2c3e50;
 
-    --accent-primary: #0ea5e9;
-    --accent-primary-hover: #38bdf8;
-    --accent-primary-glow: rgba(14, 165, 233, 0.15);
-    --accent-secondary: #8b5cf6;
-    --accent-green: #10b981;
-    --accent-amber: #f59e0b;
-    --accent-red: #ef4444;
-    --accent-pink: #ec4899;
+    --accent-primary: #3498db;
+    --accent-primary-hover: #2980b9;
+    --accent-green: #27ae60;
+    --accent-amber: #e67e22;
+    --accent-red: #e74c3c;
 
-    --border-color: rgba(148, 163, 184, 0.1);
-    --border-active: rgba(14, 165, 233, 0.4);
+    --border-color: #ecf0f1;
+    --border-active: #3498db;
 
     /* Role Colors */
-    --role-admin: #8b5cf6;
-    --role-receptionist: #0ea5e9;
-    --role-doctor: #10b981;
-    --role-nurse: #f59e0b;
+    --role-admin: #9b59b6;
+    --role-receptionist: #3498db;
+    --role-doctor: #27ae60;
+    --role-nurse: #e67e22;
 
-    /* Shadows */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.4);
-    --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.1);
+    /* Subtle shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.1);
 
     /* Layout */
-    --sidebar-width: 260px;
-    --sidebar-collapsed: 72px;
-    --header-height: 64px;
-    --border-radius: 12px;
-    --border-radius-sm: 8px;
-    --border-radius-lg: 16px;
+    --sidebar-width: 240px;
+    --header-height: 60px;
+    --border-radius: 6px;
+    --border-radius-sm: 4px;
 
-    /* Transitions */
-    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    /* Minimal transitions */
+    --transition-fast: 100ms ease;
+    --transition-base: 200ms ease;
 }
 
 /* ============================================================
@@ -71,14 +64,13 @@
 
 html {
     font-size: 14px;
-    scroll-behavior: smooth;
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg-primary);
     color: var(--text-primary);
-    line-height: 1.6;
+    line-height: 1.5;
     overflow-x: hidden;
     min-height: 100vh;
 }

@@ -70,19 +70,19 @@ router.get('/:id', requireAuth, async (req, res) => {
 
         // Appointment history
         const appointments = await db.execute(`
-            SELECT a.APPOINTMENT_ID, a.DATE_OF_VISIT, a.START_TIME, a.STATUS, a.WORKFLOW_STAGE,
+            SELECT a.APPOINTMENT_ID, a.APPOINTMENT_DATE, a.START_TIME, a.STATUS, a.WORKFLOW_STAGE,
                    d.NAME AS DOCTOR_NAME, d.SPECIALIZATION, dep.DEPT_NAME
             FROM APPOINTMENT a
             JOIN DOCTOR d ON a.DOCTOR_ID = d.DOCTOR_ID
             LEFT JOIN DEPARTMENT dep ON d.DEPARTMENT_ID = dep.DEPARTMENT_ID
             WHERE a.PATIENT_ID = :id
-            ORDER BY a.DATE_OF_VISIT DESC, a.START_TIME DESC
+            ORDER BY a.APPOINTMENT_DATE DESC, a.START_TIME DESC
         `, [req.params.id]);
 
         // Prescription history
         const prescriptions = await db.execute(`
             SELECT pr.PRESCRIPTION_ID, pr.DIAGNOSIS, pr.NOTES, pr.FOLLOW_UP,
-                   a.DATE_OF_VISIT, d.NAME AS DOCTOR_NAME
+                   a.APPOINTMENT_DATE, d.NAME AS DOCTOR_NAME
             FROM PRESCRIPTION pr
             JOIN APPOINTMENT a ON pr.APPOINTMENT_ID = a.APPOINTMENT_ID
             JOIN DOCTOR d ON a.DOCTOR_ID = d.DOCTOR_ID

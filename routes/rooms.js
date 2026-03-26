@@ -7,7 +7,7 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 router.get('/', requireAuth, async (req, res) => {
     try {
         const result = await db.execute(`
-            SELECT r.ROOM_ID, r.ROOM_NUMBER, r.TYPE, r.STATUS, 
+            SELECT r.ROOM_ID, r.ROOM_NUMBER, r.ROOM_TYPE, r.STATUS, 
                    dep.DEPT_NAME, s.NAME AS ASSIGNED_STAFF
             FROM ROOM r
             LEFT JOIN DEPARTMENT dep ON r.DEPARTMENT_ID = dep.DEPARTMENT_ID

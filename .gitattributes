@@ -1,0 +1,13 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Ensure specific file types maintain standard LF line endings
+*.js text eol=lf
+*.json text eol=lf
+*.ejs text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+*.sql text eol=lf
+
+# Treat package-lock.json as binary to prevent massive textual diffs
+package-lock.json binary

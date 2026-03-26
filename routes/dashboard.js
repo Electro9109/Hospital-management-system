@@ -37,19 +37,19 @@ router.get('/', requireAuth, async (req, res) => {
 async function renderReceptionistDashboard(req, res, userId) {
     // Today's appointments
     const todayAppts = await db.execute(`
-        SELECT a.APPOINTMENT_ID, a.DATE_OF_VISIT, a.START_TIME, a.END_TIME, a.STATUS, a.WORKFLOW_STAGE,
+        SELECT a.APPOINTMENT_ID, a.APPOINTMENT_DATE, a.START_TIME, a.END_TIME, a.STATUS, a.WORKFLOW_STAGE,
                p.NAME AS PATIENT_NAME, d.NAME AS DOCTOR_NAME, dep.DEPT_NAME
         FROM APPOINTMENT a
         JOIN PATIENT p ON a.PATIENT_ID = p.PATIENT_ID
         JOIN DOCTOR d ON a.DOCTOR_ID = d.DOCTOR_ID
         LEFT JOIN DEPARTMENT dep ON d.DEPARTMENT_ID = dep.DEPARTMENT_ID
-        WHERE TRUNC(a.DATE_OF_VISIT) = TRUNC(SYSDATE)
+        WHERE TRUNC(a.APPOINTMENT_DATE) = TRUNC(SYSDATE)
         ORDER BY a.START_TIME
     `);
 
     // Room availability
     const rooms = await db.execute(`
-        SELECT r.ROOM_ID, r.ROOM_NUMBER, r.TYPE, r.STATUS, dep.DEPT_NAME
+        SELECT r.ROOM_ID, r.ROOM_NUMBER, r.ROOM_TYPE, r.STATUS, dep.DEPT_NAME
         FROM ROOM r
         LEFT JOIN DEPARTMENT dep ON r.DEPARTMENT_ID = dep.DEPARTMENT_ID
         ORDER BY dep.DEPT_NAME, r.ROOM_NUMBER
@@ -58,13 +58,13 @@ async function renderReceptionistDashboard(req, res, userId) {
     // Stats
     const totalPatients = await db.execute(`SELECT COUNT(*) AS CNT FROM PATIENT`);
     const todayCount = await db.execute(`
-        SELECT COUNT(*) AS CNT FROM APPOINTMENT WHERE TRUNC(DATE_OF_VISIT) = TRUNC(SYSDATE)
+        SELECT COUNT(*) AS CNT FROM APPOINTMENT WHERE TRUNC(APPOINTMENT_DATE) = TRUNC(SYSDATE)
     `);
     const availableRooms = await db.execute(`
         SELECT COUNT(*) AS CNT FROM ROOM WHERE LOWER(STATUS) = 'available'
     `);
     const pendingBills = await db.execute(`
-        SELECT COUNT(*) AS CNT FROM BILLING WHERE LOWER(PAYMENT_STATUS) = 'unpaid'
+        SELECT COUNT(*) AS CNT FROM PRESCRIPTION WHERE verified_by_staff_id IS NULL
     `);
 
     res.render('dashboard/receptionist', {
@@ -95,31 +95,31 @@ async function renderDoctorDashboard(req, res, userId) {
 
     // My appointments today
     const myAppts = await db.execute(`
-        SELECT a.APPOINTMENT_ID, a.DATE_OF_VISIT, a.START_TIME, a.END_TIME, a.STATUS, a.WORKFLOW_STAGE,
+        SELECT a.APPOINTMENT_ID, a.APPOINTMENT_DATE, a.START_TIME, a.END_TIME, a.STATUS, a.WORKFLOW_STAGE,
                p.NAME AS PATIENT_NAME, p.PATIENT_ID, p.PHONE AS PATIENT_PHONE, p.GENDER, p.BLOOD_GROUP,
                r.ROOM_NUMBER
         FROM APPOINTMENT a
         JOIN PATIENT p ON a.PATIENT_ID = p.PATIENT_ID
         LEFT JOIN ROOM r ON a.ROOM_ID = r.ROOM_ID
-        WHERE a.DOCTOR_ID = :docId AND TRUNC(a.DATE_OF_VISIT) = TRUNC(SYSDATE)
+        WHERE a.DOCTOR_ID = :docId AND TRUNC(a.APPOINTMENT_DATE) = TRUNC(SYSDATE)
         ORDER BY a.START_TIME
     `, [doctor.DOCTOR_ID]);
 
     // Upcoming appointments (next 7 days)
     const upcomingAppts = await db.execute(`
-        SELECT a.APPOINTMENT_ID, a.DATE_OF_VISIT, a.START_TIME, a.STATUS,
+        SELECT a.APPOINTMENT_ID, a.APPOINTMENT_DATE, a.START_TIME, a.STATUS,
                p.NAME AS PATIENT_NAME
         FROM APPOINTMENT a
         JOIN PATIENT p ON a.PATIENT_ID = p.PATIENT_ID
         WHERE a.DOCTOR_ID = :docId 
-              AND a.DATE_OF_VISIT > TRUNC(SYSDATE)
-              AND a.DATE_OF_VISIT <= TRUNC(SYSDATE) + 7
-        ORDER BY a.DATE_OF_VISIT, a.START_TIME
+              AND a.APPOINTMENT_DATE > TRUNC(SYSDATE)
+              AND a.APPOINTMENT_DATE <= TRUNC(SYSDATE) + 7
+        ORDER BY a.APPOINTMENT_DATE, a.START_TIME
     `, [doctor.DOCTOR_ID]);
 
     // Stats
     const totalAppts = await db.execute(
-        `SELECT COUNT(*) AS CNT FROM APPOINTMENT WHERE DOCTOR_ID = :docId AND TRUNC(DATE_OF_VISIT) = TRUNC(SYSDATE)`,
+        `SELECT COUNT(*) AS CNT FROM APPOINTMENT WHERE DOCTOR_ID = :docId AND TRUNC(APPOINTMENT_DATE) = TRUNC(SYSDATE)`,
         [doctor.DOCTOR_ID]
     );
     const pendingConsult = await db.execute(
@@ -127,7 +127,7 @@ async function renderDoctorDashboard(req, res, userId) {
         [doctor.DOCTOR_ID]
     );
     const completedToday = await db.execute(
-        `SELECT COUNT(*) AS CNT FROM APPOINTMENT WHERE DOCTOR_ID = :docId AND LOWER(WORKFLOW_STAGE) IN ('post-consultation','billing','discharged') AND TRUNC(DATE_OF_VISIT) = TRUNC(SYSDATE)`,
+        `SELECT COUNT(*) AS CNT FROM APPOINTMENT WHERE DOCTOR_ID = :docId AND LOWER(WORKFLOW_STAGE) IN ('post-consultation','billing','discharged') AND TRUNC(APPOINTMENT_DATE) = TRUNC(SYSDATE)`,
         [doctor.DOCTOR_ID]
     );
 
@@ -159,7 +159,7 @@ async function renderNurseDashboard(req, res, userId) {
 
     // Floor view — rooms in nurse's department
     const floorRooms = await db.execute(`
-        SELECT r.ROOM_ID, r.ROOM_NUMBER, r.TYPE, r.STATUS, dep.DEPT_NAME,
+        SELECT r.ROOM_ID, r.ROOM_NUMBER, r.ROOM_TYPE, r.STATUS, dep.DEPT_NAME,
                s.NAME AS ASSIGNED_STAFF
         FROM ROOM r
         LEFT JOIN DEPARTMENT dep ON r.DEPARTMENT_ID = dep.DEPARTMENT_ID
@@ -176,7 +176,7 @@ async function renderNurseDashboard(req, res, userId) {
         JOIN PATIENT p ON a.PATIENT_ID = p.PATIENT_ID
         JOIN DOCTOR d ON a.DOCTOR_ID = d.DOCTOR_ID
         LEFT JOIN ROOM r ON a.ROOM_ID = r.ROOM_ID
-        WHERE TRUNC(a.DATE_OF_VISIT) = TRUNC(SYSDATE)
+        WHERE TRUNC(a.APPOINTMENT_DATE) = TRUNC(SYSDATE)
               AND LOWER(a.WORKFLOW_STAGE) IN ('checked-in','in-consultation')
         ORDER BY a.START_TIME
     `);
@@ -211,19 +211,15 @@ async function renderAdminDashboard(req, res, userId) {
     const totalDoctors = await db.execute(`SELECT COUNT(*) AS CNT FROM DOCTOR`);
     const totalStaff = await db.execute(`SELECT COUNT(*) AS CNT FROM STAFF`);
     const todayAppts = await db.execute(
-        `SELECT COUNT(*) AS CNT FROM APPOINTMENT WHERE TRUNC(DATE_OF_VISIT) = TRUNC(SYSDATE)`
+        `SELECT COUNT(*) AS CNT FROM APPOINTMENT WHERE TRUNC(APPOINTMENT_DATE) = TRUNC(SYSDATE)`
     );
     const totalRooms = await db.execute(`SELECT COUNT(*) AS CNT FROM ROOM`);
     const availableRooms = await db.execute(
         `SELECT COUNT(*) AS CNT FROM ROOM WHERE LOWER(STATUS) = 'available'`
     );
 
-    // Revenue this month
-    const revenue = await db.execute(`
-        SELECT NVL(SUM(TOTAL_AMOUNT), 0) AS TOTAL 
-        FROM BILLING 
-        WHERE TRUNC(GENERATED_AT, 'MM') = TRUNC(SYSDATE, 'MM')
-    `);
+    // Revenue this month (placeholder - no billing table)
+    const revenue = { rows: [{ TOTAL: 0 }] };
 
     // Department breakdown
     const departments = await db.execute(`
@@ -237,13 +233,13 @@ async function renderAdminDashboard(req, res, userId) {
 
     // Recent appointments
     const recentAppts = await db.execute(`
-        SELECT a.APPOINTMENT_ID, a.DATE_OF_VISIT, a.STATUS, a.WORKFLOW_STAGE,
+        SELECT a.APPOINTMENT_ID, a.APPOINTMENT_DATE, a.STATUS, a.WORKFLOW_STAGE,
                p.NAME AS PATIENT_NAME, d.NAME AS DOCTOR_NAME
         FROM APPOINTMENT a
         JOIN PATIENT p ON a.PATIENT_ID = p.PATIENT_ID
         JOIN DOCTOR d ON a.DOCTOR_ID = d.DOCTOR_ID
-        WHERE ROWNUM <= 10
         ORDER BY a.APPOINTMENT_ID DESC
+        FETCH FIRST 10 ROWS ONLY
     `);
 
     res.render('dashboard/admin', {

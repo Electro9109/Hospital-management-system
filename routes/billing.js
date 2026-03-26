@@ -8,7 +8,7 @@ router.get('/', requireAuth, requireRole('receptionist', 'admin'), async (req, r
     try {
         const result = await db.execute(`
             SELECT b.BILL_ID, b.TOTAL_AMOUNT, b.PAYMENT_STATUS, b.PAYMENT_METHOD, b.GENERATED_AT,
-                   p.NAME AS PATIENT_NAME, a.APPOINTMENT_ID, a.DATE_OF_VISIT
+                   p.NAME AS PATIENT_NAME, a.APPOINTMENT_ID, a.APPOINTMENT_DATE
             FROM BILLING b
             JOIN APPOINTMENT a ON b.APPOINTMENT_ID = a.APPOINTMENT_ID
             JOIN PATIENT p ON b.PATIENT_ID = p.PATIENT_ID
@@ -33,7 +33,7 @@ router.get('/generate/:appointmentId', requireAuth, requireRole('receptionist', 
         // Get appointment details
         const appt = await db.execute(`
             SELECT a.*, p.NAME AS PATIENT_NAME, p.PATIENT_ID,
-                   d.NAME AS DOCTOR_NAME, d.FEE AS DOCTOR_FEE, d.SPECIALIZATION,
+                   d.NAME AS DOCTOR_NAME, d.CONSULTATION_FEE AS DOCTOR_FEE, d.SPECIALIZATION,
                    dep.DEPT_NAME
             FROM APPOINTMENT a
             JOIN PATIENT p ON a.PATIENT_ID = p.PATIENT_ID
@@ -113,8 +113,8 @@ router.get('/:id', requireAuth, requireRole('receptionist', 'admin'), async (req
     try {
         const bill = await db.execute(`
             SELECT b.*, p.NAME AS PATIENT_NAME, p.PHONE, p.EMAIL,
-                   a.DATE_OF_VISIT, a.APPOINTMENT_ID,
-                   d.NAME AS DOCTOR_NAME, d.FEE AS DOCTOR_FEE, d.SPECIALIZATION,
+                   a.APPOINTMENT_DATE, a.APPOINTMENT_ID,
+                   d.NAME AS DOCTOR_NAME, d.CONSULTATION_FEE AS DOCTOR_FEE, d.SPECIALIZATION,
                    dep.DEPT_NAME
             FROM BILLING b
             JOIN APPOINTMENT a ON b.APPOINTMENT_ID = a.APPOINTMENT_ID
