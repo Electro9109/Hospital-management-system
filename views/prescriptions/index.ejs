@@ -1,0 +1,75 @@
+<%- include('../partials/header') %>
+<div class="app-layout">
+    <%- include('../partials/sidebar') %>
+    <main class="main-content">
+
+        <% if (success) { %>
+            <div class="alert alert-success">✅ <%= success %></div>
+        <% } %>
+        <% if (error) { %>
+            <div class="alert alert-error">⚠️ <%= error %></div>
+        <% } %>
+
+        <div class="card animate-in">
+            <div class="card-header">
+                <h3>💊 Prescriptions</h3>
+                <% if (user.role.toLowerCase() === 'doctor') { %>
+                    <a href="/prescriptions/create" class="btn btn-sm btn-primary">+ New Prescription</a>
+                <% } %>
+            </div>
+
+            <% if (prescriptions.length === 0) { %>
+                <div class="empty-state">
+                    <div class="empty-icon">💊</div>
+                    <h3>No prescriptions found</h3>
+                </div>
+            <% } else { %>
+                <div class="table-container" style="border: none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Patient</th>
+                                <th>Doctor</th>
+                                <th>Medicine</th>
+                                <th>Dosage</th>
+                                <th>Date</th>
+                                <th>Verified</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% prescriptions.forEach(function(pr) { %>
+                                <tr>
+                                    <td class="primary-text">#<%= pr.PRESCRIPTION_ID %></td>
+                                    <td><%= pr.PATIENT_NAME %></td>
+                                    <td><%= pr.DOCTOR_NAME %></td>
+                                    <td><%= pr.MEDICINE_NAME %></td>
+                                    <td><%= pr.DOSAGE || '—' %></td>
+                                    <td><%= new Date(pr.CREATED_AT).toLocaleDateString('en-IN') %></td>
+                                    <td>
+                                        <% if (pr.VERIFIED_BY_STAFF_ID) { %>
+                                            <%- statusBadge('verified') %>
+                                        <% } else { %>
+                                            <%- statusBadge('pending') %>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <a href="/prescriptions/<%= pr.PRESCRIPTION_ID %>" class="btn btn-sm btn-secondary">View</a>
+                                        <% if (!pr.VERIFIED_BY_STAFF_ID && ['receptionist','nurse','admin'].includes(user.role.toLowerCase())) { %>
+                                            <form action="/prescriptions/<%= pr.PRESCRIPTION_ID %>/verify" method="POST" style="display:inline;">
+                                                <button type="submit" class="btn btn-sm btn-primary">Verify</button>
+                                            </form>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %>
+        </div>
+
+    </main>
+</div>
+<%- include('../partials/footer') %>

@@ -26,51 +26,42 @@
                                 <div class="table-container animate-in">
                                     <table>
                                         <thead>
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Date</th>
-                                                <th>Patient</th>
-                                                <th>Doctor</th>
-                                                <th>Diagnosis</th>
-                                                <th>Follow-up</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <% if (prescriptions.length===0) { %>
-                                                <tr>
-                                                    <td colspan="7"
-                                                        style="text-align:center;padding:40px;color:var(--text-muted);">
-                                                        No prescriptions found</td>
-                                                </tr>
-                                                <% } %>
-                                                    <% prescriptions.forEach(function(pr) { %>
-                                                        <tr class="presc-row">
-                                                            <td class="primary-text">#<%= pr.PRESCRIPTION_ID %>
-                                                            </td>
-                                                            <td>
-                                                                <%= formatDate(pr.DATE_OF_VISIT) %>
-                                                            </td>
-                                                            <td class="primary-text">
-                                                                <%= pr.PATIENT_NAME %>
-                                                            </td>
-                                                            <td>Dr. <%= pr.DOCTOR_NAME %>
-                                                            </td>
-                                                            <td>
-                                                                <%= pr.DIAGNOSIS ? (pr.DIAGNOSIS.length> 40 ?
-                                                                    pr.DIAGNOSIS.substring(0,40)+'...' : pr.DIAGNOSIS) :
-                                                                    '—' %>
-                                                            </td>
-                                                            <td>
-                                                                <%= formatDate(pr.FOLLOW_UP) %>
-                                                            </td>
-                                                            <td>
-                                                                <a href="/prescriptions/<%= pr.PRESCRIPTION_ID %>"
-                                                                    class="btn btn-sm btn-secondary">View</a>
-                                                            </td>
-                                                        </tr>
-                                                        <% }); %>
-                                        </tbody>
+    <tr>
+        <th>ID</th>
+        <th>Patient</th>
+        <th>Doctor</th>
+        <th>Diagnosis</th>
+        <th>Follow-up</th>
+        <th>Verified</th>
+        <th>Actions</th>
+    </tr>
+</thead>
+<tbody>
+    <% prescriptions.forEach(function(pr) { %>
+        <tr>
+            <td class="primary-text">#<%= pr.PRESCRIPTION_ID %></td>
+            <td><%= pr.PATIENT_NAME %></td>
+            <td><%= pr.DOCTOR_NAME %></td>
+            <td><%= pr.DIAGNOSIS || '—' %></td>
+            <td><%= pr.FOLLOW_UP_DATE ? new Date(pr.FOLLOW_UP_DATE).toLocaleDateString('en-IN') : '—' %></td>
+            <td>
+                <% if (pr.VERIFIED_BY_STAFF_ID) { %>
+                    <%- statusBadge('verified') %>
+                <% } else { %>
+                    <%- statusBadge('pending') %>
+                <% } %>
+            </td>
+            <td>
+                <a href="/prescriptions/<%= pr.PRESCRIPTION_ID %>" class="btn btn-sm btn-secondary">View</a>
+                <% if (!pr.VERIFIED_BY_STAFF_ID && ['receptionist','nurse','admin'].includes(user.role.toLowerCase())) { %>
+                    <form action="/prescriptions/<%= pr.PRESCRIPTION_ID %>/verify" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-primary">Verify</button>
+                    </form>
+                <% } %>
+            </td>
+        </tr>
+    <% }); %>
+</tbody>
                                     </table>
                                 </div>
             </main>

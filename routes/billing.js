@@ -1,153 +1,115 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db/connection');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 
-// GET /billing — list bills
-router.get('/', requireAuth, requireRole('receptionist', 'admin'), async (req, res) => {
+// List all bills
+router.get('/', requireAuth, async (req, res) => {
     try {
-        const result = await db.execute(`
-            SELECT b.BILL_ID, b.TOTAL_AMOUNT, b.PAYMENT_STATUS, b.PAYMENT_METHOD, b.GENERATED_AT,
-                   p.NAME AS PATIENT_NAME, a.APPOINTMENT_ID, a.APPOINTMENT_DATE
-            FROM BILLING b
-            JOIN APPOINTMENT a ON b.APPOINTMENT_ID = a.APPOINTMENT_ID
+        const bills = await db.execute(`
+            SELECT b.BILL_ID, b.AMOUNT, b.STATUS, b.CREATED_AT, b.PAID_AT,
+                   p.NAME AS PATIENT_NAME,
+                   a.APPOINTMENT_DATE
+            FROM BILL b
             JOIN PATIENT p ON b.PATIENT_ID = p.PATIENT_ID
+            LEFT JOIN APPOINTMENT a ON b.APPOINTMENT_ID = a.APPOINTMENT_ID
             ORDER BY b.BILL_ID DESC
         `);
-        res.render('billing/list', {
+        res.render('billing/index', {
             pageTitle: 'Billing',
             currentPage: 'billing',
             user: req.session.user,
-            bills: result.rows
+            bills: bills.rows
         });
     } catch (err) {
-        console.error('Billing list error:', err);
-        req.session.error = 'Failed to load billing records.';
-        res.redirect('/dashboard');
+        console.error(err);
+        res.render('errors/500', { user: req.session.user });
     }
 });
 
-// GET /billing/generate/:appointmentId — generate bill
-router.get('/generate/:appointmentId', requireAuth, requireRole('receptionist', 'admin'), async (req, res) => {
+// Create bill form
+router.get('/create', requireAuth, async (req, res) => {
     try {
-        // Get appointment details
-        const appt = await db.execute(`
-            SELECT a.*, p.NAME AS PATIENT_NAME, p.PATIENT_ID,
-                   d.NAME AS DOCTOR_NAME, d.CONSULTATION_FEE AS DOCTOR_FEE, d.SPECIALIZATION,
-                   dep.DEPT_NAME
+        const patients = await db.execute(`SELECT PATIENT_ID, NAME FROM PATIENT ORDER BY NAME`);
+        const appointments = await db.execute(`
+            SELECT a.APPOINTMENT_ID, a.APPOINTMENT_DATE, p.NAME AS PATIENT_NAME
             FROM APPOINTMENT a
             JOIN PATIENT p ON a.PATIENT_ID = p.PATIENT_ID
-            JOIN DOCTOR d ON a.DOCTOR_ID = d.DOCTOR_ID
-            LEFT JOIN DEPARTMENT dep ON d.DEPARTMENT_ID = dep.DEPARTMENT_ID
-            WHERE a.APPOINTMENT_ID = :id
-        `, [req.params.appointmentId]);
-
-        if (appt.rows.length === 0) {
-            req.session.error = 'Appointment not found.';
-            return res.redirect('/billing');
-        }
-
-        // Get prescription medicines for cost calculation
-        const medicines = await db.execute(`
-            SELECT pm.*, m.NAME AS MEDICINE_NAME, m.UNIT_PRICE, m.DOSAGE_FORM
-            FROM PRESCRIPTION_MEDICINE pm
-            JOIN MEDICINE m ON pm.MEDICINE_ID = m.MEDICINE_ID
-            JOIN PRESCRIPTION pr ON pm.PRESCRIPTION_ID = pr.PRESCRIPTION_ID
-            WHERE pr.APPOINTMENT_ID = :id
-        `, [req.params.appointmentId]);
-
-        // Calculate total
-        const doctorFee = appt.rows[0].DOCTOR_FEE || 0;
-        const medicineCost = medicines.rows.reduce((sum, m) => sum + (m.UNIT_PRICE || 0), 0);
-        const totalAmount = doctorFee + medicineCost;
-
-        res.render('billing/generate', {
-            pageTitle: 'Generate Bill',
+            WHERE LOWER(a.STATUS) != 'cancelled'
+            ORDER BY a.APPOINTMENT_DATE DESC
+            FETCH FIRST 50 ROWS ONLY
+        `);
+        res.render('billing/create', {
+            pageTitle: 'Create Bill',
             currentPage: 'billing',
             user: req.session.user,
-            appt: appt.rows[0],
-            medicines: medicines.rows,
-            doctorFee,
-            medicineCost,
-            totalAmount
+            patients: patients.rows,
+            appointments: appointments.rows
         });
     } catch (err) {
-        console.error('Bill generation error:', err);
-        req.session.error = 'Failed to generate bill.';
-        res.redirect('/billing');
+        console.error(err);
+        res.render('errors/500', { user: req.session.user });
     }
 });
 
-// POST /billing/generate/:appointmentId — save bill
-router.post('/generate/:appointmentId', requireAuth, requireRole('receptionist', 'admin'), async (req, res) => {
-    const { total_amount, payment_method } = req.body;
+// Save new bill
+router.post('/create', requireAuth, async (req, res) => {
+    const { patient_id, appointment_id, amount } = req.body;
     try {
-        // Get patient ID from appointment
-        const appt = await db.execute(
-            `SELECT PATIENT_ID FROM APPOINTMENT WHERE APPOINTMENT_ID = :id`,
-            [req.params.appointmentId]
-        );
-
         await db.execute(`
-            INSERT INTO BILLING (BILL_ID, APPOINTMENT_ID, PATIENT_ID, TOTAL_AMOUNT, PAYMENT_STATUS, PAYMENT_METHOD, GENERATED_AT)
-            VALUES (BILLING_SEQ.NEXTVAL, :apptId, :patientId, :amount, 'Paid', :method, SYSDATE)
-        `, [req.params.appointmentId, appt.rows[0].PATIENT_ID, total_amount, payment_method]);
-
-        // Update workflow to billing/discharged
-        await db.execute(
-            `UPDATE APPOINTMENT SET WORKFLOW_STAGE = 'billing' WHERE APPOINTMENT_ID = :id`,
-            [req.params.appointmentId]
-        );
-
-        req.session.success = 'Bill generated successfully!';
+            INSERT INTO BILL (PATIENT_ID, APPOINTMENT_ID, AMOUNT, STATUS)
+            VALUES (:pid, :aid, :amt, 'PENDING')
+        `, [patient_id, appointment_id || null, amount]);
+        req.session.success = 'Bill created successfully.';
         res.redirect('/billing');
     } catch (err) {
-        console.error('Bill save error:', err);
-        req.session.error = 'Failed to save bill. ' + (err.message || '');
-        res.redirect(`/billing/generate/${req.params.appointmentId}`);
+        console.error(err);
+        req.session.error = 'Failed to create bill.';
+        res.redirect('/billing/create');
     }
 });
 
-// GET /billing/:id — view invoice
-router.get('/:id', requireAuth, requireRole('receptionist', 'admin'), async (req, res) => {
+// Mark bill as paid
+router.post('/:id/pay', requireAuth, async (req, res) => {
+    try {
+        await db.execute(`
+            UPDATE BILL SET STATUS = 'PAID', PAID_AT = SYSDATE
+            WHERE BILL_ID = :id
+        `, [req.params.id]);
+        req.session.success = 'Bill marked as paid.';
+        res.redirect('/billing');
+    } catch (err) {
+        console.error(err);
+        req.session.error = 'Failed to update bill.';
+        res.redirect('/billing');
+    }
+});
+
+// View single bill (printable)
+router.get('/:id', requireAuth, async (req, res) => {
     try {
         const bill = await db.execute(`
-            SELECT b.*, p.NAME AS PATIENT_NAME, p.PHONE, p.EMAIL,
-                   a.APPOINTMENT_DATE, a.APPOINTMENT_ID,
-                   d.NAME AS DOCTOR_NAME, d.CONSULTATION_FEE AS DOCTOR_FEE, d.SPECIALIZATION,
-                   dep.DEPT_NAME
-            FROM BILLING b
-            JOIN APPOINTMENT a ON b.APPOINTMENT_ID = a.APPOINTMENT_ID
+            SELECT b.BILL_ID, b.AMOUNT, b.STATUS, b.CREATED_AT, b.PAID_AT,
+                   p.NAME AS PATIENT_NAME, p.PHONE, p.GENDER,
+                   a.APPOINTMENT_DATE, d.NAME AS DOCTOR_NAME
+            FROM BILL b
             JOIN PATIENT p ON b.PATIENT_ID = p.PATIENT_ID
-            JOIN DOCTOR d ON a.DOCTOR_ID = d.DOCTOR_ID
-            LEFT JOIN DEPARTMENT dep ON d.DEPARTMENT_ID = dep.DEPARTMENT_ID
+            LEFT JOIN APPOINTMENT a ON b.APPOINTMENT_ID = a.APPOINTMENT_ID
+            LEFT JOIN DOCTOR d ON a.DOCTOR_ID = d.DOCTOR_ID
             WHERE b.BILL_ID = :id
         `, [req.params.id]);
 
-        if (bill.rows.length === 0) {
-            req.session.error = 'Bill not found.';
-            return res.redirect('/billing');
-        }
+        if (!bill.rows.length) return res.render('errors/404', { user: req.session.user });
 
-        const medicines = await db.execute(`
-            SELECT pm.*, m.NAME AS MEDICINE_NAME, m.UNIT_PRICE, m.DOSAGE_FORM
-            FROM PRESCRIPTION_MEDICINE pm
-            JOIN MEDICINE m ON pm.MEDICINE_ID = m.MEDICINE_ID
-            JOIN PRESCRIPTION pr ON pm.PRESCRIPTION_ID = pr.PRESCRIPTION_ID
-            WHERE pr.APPOINTMENT_ID = :apptId
-        `, [bill.rows[0].APPOINTMENT_ID]);
-
-        res.render('billing/invoice', {
-            pageTitle: `Invoice #${req.params.id}`,
+        res.render('billing/view', {
+            pageTitle: 'Invoice',
             currentPage: 'billing',
             user: req.session.user,
-            bill: bill.rows[0],
-            medicines: medicines.rows
+            bill: bill.rows[0]
         });
     } catch (err) {
-        console.error('Invoice view error:', err);
-        req.session.error = 'Failed to load invoice.';
-        res.redirect('/billing');
+        console.error(err);
+        res.render('errors/500', { user: req.session.user });
     }
 });
 

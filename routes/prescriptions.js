@@ -1,188 +1,160 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db/connection');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 
-// GET /prescriptions — list all prescriptions
+// List all prescriptions
+// List all prescriptions
 router.get('/', requireAuth, async (req, res) => {
     try {
-        const role = req.session.user.role.toLowerCase();
-        const userId = req.session.user.user_id;
-        let query, binds = [];
-
-        if (role === 'doctor') {
-            const doc = await db.execute(`SELECT DOCTOR_ID FROM DOCTOR WHERE USER_ID = :uid`, [userId]);
-            const docId = doc.rows[0]?.DOCTOR_ID;
-            query = `
-                SELECT pr.PRESCRIPTION_ID, pr.DIAGNOSIS, pr.FOLLOW_UP,
-                       a.DATE_OF_VISIT, a.APPOINTMENT_ID,
-                       p.NAME AS PATIENT_NAME, d.NAME AS DOCTOR_NAME
-                FROM PRESCRIPTION pr
-                JOIN APPOINTMENT a ON pr.APPOINTMENT_ID = a.APPOINTMENT_ID
-                JOIN PATIENT p ON a.PATIENT_ID = p.PATIENT_ID
-                JOIN DOCTOR d ON a.DOCTOR_ID = d.DOCTOR_ID
-                WHERE a.DOCTOR_ID = :docId
-                ORDER BY a.DATE_OF_VISIT DESC
-            `;
-            binds = [docId];
-        } else {
-            query = `
-                SELECT pr.PRESCRIPTION_ID, pr.DIAGNOSIS, pr.FOLLOW_UP,
-                       a.DATE_OF_VISIT, a.APPOINTMENT_ID,
-                       p.NAME AS PATIENT_NAME, d.NAME AS DOCTOR_NAME
-                FROM PRESCRIPTION pr
-                JOIN APPOINTMENT a ON pr.APPOINTMENT_ID = a.APPOINTMENT_ID
-                JOIN PATIENT p ON a.PATIENT_ID = p.PATIENT_ID
-                JOIN DOCTOR d ON a.DOCTOR_ID = d.DOCTOR_ID
-                ORDER BY a.DATE_OF_VISIT DESC
-            `;
-        }
-
-        const result = await db.execute(query, binds);
-        res.render('prescriptions/list', {
-            pageTitle: 'Prescriptions',
-            currentPage: 'prescriptions',
-            user: req.session.user,
-            prescriptions: result.rows
-        });
-    } catch (err) {
-        console.error('Prescriptions list error:', err);
-        req.session.error = 'Failed to load prescriptions.';
-        res.redirect('/dashboard');
-    }
-});
-
-// GET /prescriptions/write/:appointmentId — prescription form
-router.get('/write/:appointmentId', requireAuth, requireRole('doctor', 'admin'), async (req, res) => {
-    try {
-        const appt = await db.execute(`
-            SELECT a.*, p.NAME AS PATIENT_NAME, p.GENDER, p.BLOOD_GROUP, p.DOB
-            FROM APPOINTMENT a
-            JOIN PATIENT p ON a.PATIENT_ID = p.PATIENT_ID
-            WHERE a.APPOINTMENT_ID = :id
-        `, [req.params.appointmentId]);
-
-        if (appt.rows.length === 0) {
-            req.session.error = 'Appointment not found.';
-            return res.redirect('/appointments');
-        }
-
-        const medicines = await db.execute(`
-            SELECT MEDICINE_ID, NAME, DOSAGE_FORM, STRENGTH, UNIT_PRICE
-            FROM MEDICINE ORDER BY NAME
-        `);
-
-        res.render('prescriptions/write', {
-            pageTitle: 'Write Prescription',
-            currentPage: 'prescriptions',
-            user: req.session.user,
-            appt: appt.rows[0],
-            medicines: medicines.rows
-        });
-    } catch (err) {
-        console.error('Prescription form error:', err);
-        req.session.error = 'Failed to load prescription form.';
-        res.redirect('/appointments');
-    }
-});
-
-// POST /prescriptions/write/:appointmentId — save prescription
-router.post('/write/:appointmentId', requireAuth, requireRole('doctor', 'admin'), async (req, res) => {
-    const { diagnosis, notes, follow_up, medicine_ids, dosages, frequencies, durations } = req.body;
-    let connection;
-
-    try {
-        connection = await db.getConnection();
-
-        // Insert prescription
-        const prescResult = await connection.execute(`
-            INSERT INTO PRESCRIPTION (PRESCRIPTION_ID, APPOINTMENT_ID, DIAGNOSIS, NOTES, FOLLOW_UP)
-            VALUES (PRESCRIPTION_SEQ.NEXTVAL, :apptId, :diagnosis, :notes, TO_DATE(:follow_up, 'YYYY-MM-DD'))
-            RETURNING PRESCRIPTION_ID INTO :prescId
-        `, {
-            apptId: req.params.appointmentId,
-            diagnosis,
-            notes: notes || null,
-            follow_up: follow_up || null,
-            prescId: { type: require('oracledb').NUMBER, dir: require('oracledb').BIND_OUT }
-        });
-
-        const prescId = prescResult.outBinds.prescId[0];
-
-        // Insert prescription medicines
-        if (medicine_ids) {
-            const meds = Array.isArray(medicine_ids) ? medicine_ids : [medicine_ids];
-            const doses = Array.isArray(dosages) ? dosages : [dosages];
-            const freqs = Array.isArray(frequencies) ? frequencies : [frequencies];
-            const durs = Array.isArray(durations) ? durations : [durations];
-
-            for (let i = 0; i < meds.length; i++) {
-                if (meds[i]) {
-                    await connection.execute(`
-                        INSERT INTO PRESCRIPTION_MEDICINE (PRESCRIPTION_ID, MEDICINE_ID, DOSAGE, FREQUENCY, DURATION)
-                        VALUES (:prescId, :medId, :dosage, :frequency, :duration)
-                    `, [prescId, meds[i], doses[i] || null, freqs[i] || null, durs[i] || null]);
-                }
-            }
-        }
-
-        // Update workflow stage to in-consultation
-        await connection.execute(`
-            UPDATE APPOINTMENT SET WORKFLOW_STAGE = 'in-consultation'
-            WHERE APPOINTMENT_ID = :id AND LOWER(WORKFLOW_STAGE) IN ('triage', 'checked-in')
-        `, [req.params.appointmentId]);
-
-        await connection.commit();
-
-        req.session.success = 'Prescription saved successfully!';
-        res.redirect(`/appointments/${req.params.appointmentId}`);
-    } catch (err) {
-        if (connection) await connection.rollback();
-        console.error('Prescription save error:', err);
-        req.session.error = 'Failed to save prescription. ' + (err.message || '');
-        res.redirect(`/prescriptions/write/${req.params.appointmentId}`);
-    } finally {
-        if (connection) await connection.close();
-    }
-});
-
-// GET /prescriptions/:id — view prescription
-router.get('/:id', requireAuth, async (req, res) => {
-    try {
-        const presc = await db.execute(`
-            SELECT pr.*, a.APPOINTMENT_DATE, a.APPOINTMENT_ID,
-                   p.NAME AS PATIENT_NAME, p.GENDER, p.BLOOD_GROUP, p.DOB, p.PHONE AS PATIENT_PHONE,
-                   d.NAME AS DOCTOR_NAME, d.SPECIALIZATION, dep.DEPT_NAME
+        const prescriptions = await db.execute(`
+            SELECT pr.PRESCRIPTION_ID, pr.DIAGNOSIS, pr.NOTES,
+                   pr.FOLLOW_UP_DATE, pr.VERIFIED_BY_STAFF_ID,
+                   a.APPOINTMENT_DATE,
+                   p.NAME AS PATIENT_NAME,
+                   d.NAME AS DOCTOR_NAME
             FROM PRESCRIPTION pr
             JOIN APPOINTMENT a ON pr.APPOINTMENT_ID = a.APPOINTMENT_ID
             JOIN PATIENT p ON a.PATIENT_ID = p.PATIENT_ID
             JOIN DOCTOR d ON a.DOCTOR_ID = d.DOCTOR_ID
-            LEFT JOIN DEPARTMENT dep ON d.DEPARTMENT_ID = dep.DEPARTMENT_ID
+            ORDER BY pr.PRESCRIPTION_ID DESC
+        `);
+        res.render('prescriptions/index', {
+            pageTitle: 'Prescriptions',
+            currentPage: 'prescriptions',
+            user: req.session.user,
+            prescriptions: prescriptions.rows
+        });
+    } catch (err) {
+        console.error(err);
+        res.render('errors/500', { user: req.session.user });
+    }
+});
+
+// Create prescription form (doctors only)
+router.get('/create', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.user.user_id;
+        const doctorResult = await db.execute(
+            `SELECT DOCTOR_ID FROM DOCTOR WHERE USER_ID = :uid`, [userId]
+        );
+        const doctor = doctorResult.rows[0];
+
+        const patients = await db.execute(`SELECT PATIENT_ID, NAME FROM PATIENT ORDER BY NAME`);
+        const appointments = await db.execute(`
+            SELECT a.APPOINTMENT_ID, a.APPOINTMENT_DATE, p.NAME AS PATIENT_NAME
+            FROM APPOINTMENT a
+            JOIN PATIENT p ON a.PATIENT_ID = p.PATIENT_ID
+            WHERE a.DOCTOR_ID = :docId
+            ORDER BY a.APPOINTMENT_DATE DESC
+            FETCH FIRST 30 ROWS ONLY
+        `, [doctor?.DOCTOR_ID]);
+
+        res.render('prescription/create', {
+            pageTitle: 'Write Prescription',
+            currentPage: 'prescriptions',
+            user: req.session.user,
+            doctor,
+            patients: patients.rows,
+            appointments: appointments.rows
+        });
+    } catch (err) {
+        console.error(err);
+        res.render('errors/500', { user: req.session.user });
+    }
+});
+
+// Save prescription
+// Save prescription
+router.post('/create', requireAuth, async (req, res) => {
+    const { appointment_id, diagnosis, notes, follow_up_date } = req.body;
+    try {
+        await db.execute(`
+            INSERT INTO PRESCRIPTION (APPOINTMENT_ID, DIAGNOSIS, NOTES, FOLLOW_UP_DATE)
+            VALUES (:aid, :diag, :notes, TO_DATE(:fud, 'YYYY-MM-DD'))
+        `, [appointment_id, diagnosis, notes, follow_up_date || null]);
+        req.session.success = 'Prescription saved.';
+        res.redirect('/prescriptions');
+    } catch (err) {
+        console.error(err);
+        req.session.error = 'Failed to save prescription.';
+        res.redirect('/prescriptions/create');
+    }
+});
+
+// View single prescription
+router.get('/:id', requireAuth, async (req, res) => {
+    try {
+        const result = await db.execute(`
+            SELECT pr.PRESCRIPTION_ID, pr.DIAGNOSIS, pr.NOTES,
+                   pr.FOLLOW_UP_DATE, pr.VERIFIED_BY_STAFF_ID,
+                   a.APPOINTMENT_DATE,
+                   p.NAME AS PATIENT_NAME, p.PHONE, p.GENDER, p.BLOOD_GROUP,
+                   d.NAME AS DOCTOR_NAME, d.SPECIALIZATION
+            FROM PRESCRIPTION pr
+            JOIN APPOINTMENT a ON pr.APPOINTMENT_ID = a.APPOINTMENT_ID
+            JOIN PATIENT p ON a.PATIENT_ID = p.PATIENT_ID
+            JOIN DOCTOR d ON a.DOCTOR_ID = d.DOCTOR_ID
             WHERE pr.PRESCRIPTION_ID = :id
         `, [req.params.id]);
 
-        if (presc.rows.length === 0) {
-            req.session.error = 'Prescription not found.';
-            return res.redirect('/prescriptions');
-        }
-
-        const medicines = await db.execute(`
-            SELECT pm.*, m.NAME AS MEDICINE_NAME, m.DOSAGE_FORM, m.STRENGTH, m.UNIT_PRICE
-            FROM PRESCRIPTION_MEDICINE pm
-            JOIN MEDICINE m ON pm.MEDICINE_ID = m.MEDICINE_ID
-            WHERE pm.PRESCRIPTION_ID = :id
-        `, [req.params.id]);
+        if (!result.rows.length) return res.render('errors/404', { user: req.session.user });
 
         res.render('prescriptions/view', {
-            pageTitle: `Prescription #${req.params.id}`,
+            pageTitle: 'Prescription',
             currentPage: 'prescriptions',
             user: req.session.user,
-            prescription: presc.rows[0],
-            medicines: medicines.rows
+            prescription: result.rows[0]
         });
     } catch (err) {
-        console.error('Prescription view error:', err);
-        req.session.error = 'Failed to load prescription.';
+        console.error(err);
+        res.render('errors/500', { user: req.session.user });
+    }
+});
+
+// View single prescription (printable)
+router.get('/:id', requireAuth, async (req, res) => {
+    try {
+        const result = await db.execute(`
+            SELECT pr.PRESCRIPTION_ID, pr.MEDICINE_NAME, pr.DOSAGE, pr.INSTRUCTIONS,
+                   pr.CREATED_AT, pr.VERIFIED_BY_STAFF_ID,
+                   p.NAME AS PATIENT_NAME, p.PHONE, p.GENDER, p.BLOOD_GROUP,
+                   d.NAME AS DOCTOR_NAME, d.SPECIALIZATION
+            FROM PRESCRIPTION pr
+            JOIN PATIENT p ON pr.PATIENT_ID = p.PATIENT_ID
+            JOIN DOCTOR d ON pr.DOCTOR_ID = d.DOCTOR_ID
+            WHERE pr.PRESCRIPTION_ID = :id
+        `, [req.params.id]);
+
+        if (!result.rows.length) return res.render('errors/404', { user: req.session.user });
+
+        res.render('prescription/view', {
+            pageTitle: 'Prescription',
+            currentPage: 'prescriptions',
+            user: req.session.user,
+            prescription: result.rows[0]
+        });
+    } catch (err) {
+        console.error(err);
+        res.render('errors/500', { user: req.session.user });
+    }
+});
+
+// Verify prescription (receptionist/staff)
+router.post('/:id/verify', requireAuth, async (req, res) => {
+    try {
+        const staffResult = await db.execute(
+            `SELECT STAFF_ID FROM STAFF WHERE USER_ID = :uid`, [req.session.user.user_id]
+        );
+        const staff = staffResult.rows[0];
+        await db.execute(`
+            UPDATE PRESCRIPTION SET VERIFIED_BY_STAFF_ID = :sid WHERE PRESCRIPTION_ID = :id
+        `, [staff.STAFF_ID, req.params.id]);
+        req.session.success = 'Prescription verified.';
+        res.redirect('/prescriptions');
+    } catch (err) {
+        console.error(err);
+        req.session.error = 'Failed to verify.';
         res.redirect('/prescriptions');
     }
 });

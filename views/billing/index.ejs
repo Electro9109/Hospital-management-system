@@ -1,0 +1,66 @@
+<%- include('../partials/header') %>
+<div class="app-layout">
+    <%- include('../partials/sidebar') %>
+    <main class="main-content">
+
+        <% if (success) { %>
+            <div class="alert alert-success">✅ <%= success %></div>
+        <% } %>
+        <% if (error) { %>
+            <div class="alert alert-error">⚠️ <%= error %></div>
+        <% } %>
+
+        <div class="card animate-in">
+            <div class="card-header">
+                <h3>💳 Billing</h3>
+                <a href="/billing/create" class="btn btn-sm btn-primary">+ New Bill</a>
+            </div>
+
+            <% if (bills.length === 0) { %>
+                <div class="empty-state">
+                    <div class="empty-icon">💳</div>
+                    <h3>No bills found</h3>
+                    <p>Create a new bill to get started.</p>
+                </div>
+            <% } else { %>
+                <div class="table-container" style="border: none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Bill ID</th>
+                                <th>Patient</th>
+                                <th>Appointment Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% bills.forEach(function(bill) { %>
+                                <tr>
+                                    <td class="primary-text">#<%= bill.BILL_ID %></td>
+                                    <td><%= bill.PATIENT_NAME %></td>
+                                    <td><%= bill.APPOINTMENT_DATE ? new Date(bill.APPOINTMENT_DATE).toLocaleDateString('en-IN') : '—' %></td>
+                                    <td>₹<%= Number(bill.AMOUNT).toLocaleString('en-IN') %></td>
+                                    <td><%- statusBadge(bill.STATUS) %></td>
+                                    <td><%= new Date(bill.CREATED_AT).toLocaleDateString('en-IN') %></td>
+                                    <td>
+                                        <a href="/billing/<%= bill.BILL_ID %>" class="btn btn-sm btn-secondary">View</a>
+                                        <% if (bill.STATUS === 'PENDING') { %>
+                                            <form action="/billing/<%= bill.BILL_ID %>/pay" method="POST" style="display:inline;">
+                                                <button type="submit" class="btn btn-sm btn-primary">Mark Paid</button>
+                                            </form>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %>
+        </div>
+
+    </main>
+</div>
+<%- include('../partials/footer') %>

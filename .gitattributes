@@ -11,3 +11,7 @@
 
 # Treat package-lock.json as binary to prevent massive textual diffs
 package-lock.json binary
+
+*.sh text eol=lf
+*.env text eol=lf
+.gitattributes text eol=lf

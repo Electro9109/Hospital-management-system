@@ -7,7 +7,7 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 router.get('/', requireAuth, requireRole('admin'), async (req, res) => {
     try {
         const result = await db.execute(`
-            SELECT d.DOCTOR_ID, d.NAME, d.SPECIALIZATION, d.PHONE, d.FEE,
+            SELECT d.DOCTOR_ID, d.NAME, d.SPECIALIZATION, d.PHONE, d.CONSULTATION_FEE AS FEE,
                    dep.DEPT_NAME, u.USERNAME
             FROM DOCTOR d
             LEFT JOIN DEPARTMENT dep ON d.DEPARTMENT_ID = dep.DEPARTMENT_ID

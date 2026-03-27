@@ -55,6 +55,9 @@ const staffRoutes = require('./routes/staff');
 const doctorRoutes = require('./routes/doctors');
 const departmentRoutes = require('./routes/departments');
 
+app.use('/billing', require('./routes/billing'));
+app.use('/prescriptions', require('./routes/prescriptions'));
+
 app.use('/', authRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/patients', patientRoutes);
@@ -65,6 +68,7 @@ app.use('/billing', billingRoutes);
 app.use('/staff', staffRoutes);
 app.use('/doctors', doctorRoutes);
 app.use('/departments', departmentRoutes);
+
 
 // 404 handler
 app.use((req, res) => {

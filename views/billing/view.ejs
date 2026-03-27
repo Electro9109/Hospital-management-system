@@ -1,0 +1,83 @@
+<%- include('../partials/header') %>
+<div class="app-layout">
+    <%- include('../partials/sidebar') %>
+    <main class="main-content">
+
+        <div class="card animate-in" id="invoice-card">
+            <div class="card-header">
+                <h3>🧾 Invoice #<%= bill.BILL_ID %></h3>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button onclick="window.print()" class="btn btn-sm btn-secondary">🖨️ Print</button>
+                    <a href="/billing" class="btn btn-sm btn-secondary">← Back</a>
+                </div>
+            </div>
+
+            <div style="padding: 2rem;">
+                <!-- Hospital Header -->
+                <div style="text-align: center; margin-bottom: 2rem; border-bottom: 2px solid var(--border); padding-bottom: 1rem;">
+                    <h2 style="margin: 0;">🏥 City Hospital</h2>
+                    <p style="margin: 0; color: var(--text-muted);">Official Invoice</p>
+                </div>
+
+                <!-- Bill Info -->
+                <div class="content-grid" style="margin-bottom: 1.5rem;">
+                    <div>
+                        <p><strong>Patient:</strong> <%= bill.PATIENT_NAME %></p>
+                        <p><strong>Phone:</strong> <%= bill.PHONE || '—' %></p>
+                        <p><strong>Gender:</strong> <%= bill.GENDER || '—' %></p>
+                    </div>
+                    <div>
+                        <p><strong>Doctor:</strong> <%= bill.DOCTOR_NAME || '—' %></p>
+                        <p><strong>Appointment Date:</strong> <%= bill.APPOINTMENT_DATE ? new Date(bill.APPOINTMENT_DATE).toLocaleDateString('en-IN') : '—' %></p>
+                        <p><strong>Bill Date:</strong> <%= new Date(bill.CREATED_AT).toLocaleDateString('en-IN') %></p>
+                    </div>
+                </div>
+
+                <!-- Amount Table -->
+                <div class="table-container" style="border: none; margin-bottom: 1.5rem;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th style="text-align: right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Consultation / Treatment Charges</td>
+                                <td style="text-align: right;">₹<%= Number(bill.AMOUNT).toLocaleString('en-IN') %></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total</strong></td>
+                                <td style="text-align: right;"><strong>₹<%= Number(bill.AMOUNT).toLocaleString('en-IN') %></strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Status -->
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span>Status: <%- statusBadge(bill.STATUS) %></span>
+                    <% if (bill.PAID_AT) { %>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Paid on <%= new Date(bill.PAID_AT).toLocaleDateString('en-IN') %></span>
+                    <% } %>
+                    <% if (bill.STATUS === 'PENDING') { %>
+                        <form action="/billing/<%= bill.BILL_ID %>/pay" method="POST">
+                            <button type="submit" class="btn btn-sm btn-primary">Mark as Paid</button>
+                        </form>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            @media print {
+                .sidebar, .card-header .btn, form { display: none !important; }
+                .main-content { margin: 0; padding: 0; }
+                #invoice-card { box-shadow: none; border: none; }
+            }
+        </style>
+
+    </main>
+</div>
+<%- include('../partials/footer') %>    

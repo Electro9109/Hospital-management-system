@@ -1,0 +1,53 @@
+<%- include('../partials/header') %>
+<div class="app-layout">
+    <%- include('../partials/sidebar') %>
+    <main class="main-content">
+
+        <% if (error) { %>
+            <div class="alert alert-error">⚠️ <%= error %></div>
+        <% } %>
+
+        <div class="card animate-in">
+            <div class="card-header">
+                <h3>💳 Create New Bill</h3>
+                <a href="/billing" class="btn btn-sm btn-secondary">← Back</a>
+            </div>
+
+            <form action="/billing/create" method="POST" style="padding: 1.5rem;">
+                <div class="form-group">
+                    <label>Patient</label>
+                    <select name="patient_id" class="form-control" required>
+                        <option value="">— Select Patient —</option>
+                        <% patients.forEach(function(p) { %>
+                            <option value="<%= p.PATIENT_ID %>"><%= p.NAME %></option>
+                        <% }); %>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Appointment (optional)</label>
+                    <select name="appointment_id" class="form-control">
+                        <option value="">— Select Appointment —</option>
+                        <% appointments.forEach(function(a) { %>
+                            <option value="<%= a.APPOINTMENT_ID %>">
+                                #<%= a.APPOINTMENT_ID %> — <%= a.PATIENT_NAME %> — <%= new Date(a.APPOINTMENT_DATE).toLocaleDateString('en-IN') %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" name="amount" class="form-control" placeholder="Enter amount" min="0" step="0.01" required />
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="submit" class="btn btn-primary">Create Bill</button>
+                    <a href="/billing" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+    </main>
+</div>
+<%- include('../partials/footer') %>

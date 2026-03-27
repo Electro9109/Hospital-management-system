@@ -1,0 +1,53 @@
+<%- include('../partials/header') %>
+<div class="app-layout">
+    <%- include('../partials/sidebar') %>
+    <main class="main-content">
+
+        <% if (error) { %>
+            <div class="alert alert-error">⚠️ <%= error %></div>
+        <% } %>
+
+        <div class="card animate-in">
+            <div class="card-header">
+                <h3>💊 Write Prescription</h3>
+                <a href="/prescriptions" class="btn btn-sm btn-secondary">← Back</a>
+            </div>
+
+            <form action="/prescriptions/create" method="POST" style="padding: 1.5rem;">
+    <div class="form-group">
+        <label>Appointment</label>
+        <select name="appointment_id" class="form-control" required>
+            <option value="">— Select Appointment —</option>
+            <% appointments.forEach(function(a) { %>
+                <option value="<%= a.APPOINTMENT_ID %>">
+                    #<%= a.APPOINTMENT_ID %> — <%= a.PATIENT_NAME %> — <%= new Date(a.APPOINTMENT_DATE).toLocaleDateString('en-IN') %>
+                </option>
+            <% }); %>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Diagnosis</label>
+        <textarea name="diagnosis" class="form-control" rows="3" placeholder="Enter diagnosis..."></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>Notes / Prescription Details</label>
+        <textarea name="notes" class="form-control" rows="4" placeholder="Medicines, dosage, instructions..."></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>Follow-up Date (optional)</label>
+        <input type="date" name="follow_up_date" class="form-control" />
+    </div>
+
+    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+        <button type="submit" class="btn btn-primary">Save Prescription</button>
+        <a href="/prescriptions" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+        </div>
+
+    </main>
+</div>
+<%- include('../partials/footer') %>

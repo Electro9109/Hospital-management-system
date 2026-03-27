@@ -23,7 +23,7 @@ router.get('/', requireAuth, async (req, res) => {
             LEFT JOIN DEPARTMENT dep ON d.DEPARTMENT_ID = dep.DEPARTMENT_ID
             LEFT JOIN ROOM r ON a.ROOM_ID = r.ROOM_ID
             WHERE a.DOCTOR_ID = :docId
-            ORDER BY a.DATE_OF_VISIT DESC, a.START_TIME DESC
+            ORDER BY a.APPOINTMENT_DATE DESC, a.START_TIME DESC
         `;
         binds = [docId];
     } else {
@@ -36,7 +36,7 @@ router.get('/', requireAuth, async (req, res) => {
             JOIN DOCTOR d ON a.DOCTOR_ID = d.DOCTOR_ID
             LEFT JOIN DEPARTMENT dep ON d.DEPARTMENT_ID = dep.DEPARTMENT_ID
             LEFT JOIN ROOM r ON a.ROOM_ID = r.ROOM_ID
-            ORDER BY a.DATE_OF_VISIT DESC, a.START_TIME DESC
+            ORDER BY a.APPOINTMENT_DATE DESC, a.START_TIME DESC
         `;
     }
 
@@ -96,10 +96,10 @@ router.post('/book', requireAuth, requireRole('receptionist', 'admin'), async (r
     const userId = req.session.user.user_id;
     try {
         await db.execute(`
-            INSERT INTO APPOINTMENT (APPOINTMENT_ID, PATIENT_ID, DOCTOR_ID, ROOM_ID, STAFF_ID, USER_ID,
-                                     DATE_OF_VISIT, START_TIME, END_TIME, STATUS, WORKFLOW_STAGE)
-            VALUES (APPOINTMENT_SEQ.NEXTVAL, :patient_id, :doctor_id, :room_id, :staff_id, :user_id,
-                    TO_DATE(:date_val, 'YYYY-MM-DD'), :start_time, :end_time, 'Scheduled', 'registered')
+            INSERT INTO APPOINTMENT (APPOINTMENT_ID, PATIENT_ID, DOCTOR_ID, ROOM_ID, STAFF_ID, CREATED_BY_USER_ID,
+                         APPOINTMENT_DATE, START_TIME, END_TIME, STATUS, WORKFLOW_STAGE)
+VALUES (APPOINTMENT_SEQ.NEXTVAL, :patient_id, :doctor_id, :room_id, :staff_id, :user_id,
+        TO_DATE(:date_val, 'YYYY-MM-DD'), :start_time, :end_time, 'Scheduled', 'registered')
         `, [patient_id, doctor_id, room_id || null, staff_id || null, userId, date, start_time, end_time]);
 
         // Update room status if room assigned
